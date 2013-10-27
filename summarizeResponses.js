@@ -245,7 +245,103 @@ showhide.click(function ()
 var gvtl = rdbGenericVideoLinkTypes;
 var genericVideoLinkTypes = gvtl;
 
-function convert2links(){
+
+var _sR_checkOpts = {
+	source: "content_scan",
+	author: "anonymous",
+	
+	callback: function (clue){
+		var elID = url2id(clue.URL, "rdb_clue_link");
+		var url = clue.URL;
+		var videoID = clue.videoID;
+		var comment = this.commentEL;
+		if (url)
+		{
+			var RDBextant;
+			try 
+			{
+				RDBextant = $("#"+elID);	
+			}
+			catch (err)
+			{
+				RDBextant = null;
+			}
+			
+			if (RDBextant && RDBextant.length ==0)
+			{
+				var icon = $("<img>",
+							{
+								src: iconURL,
+								css: { display: "table-cell",
+										 float: "left",
+										height: "16px"
+									 }
+							});
+				var newlink = $("<a>",
+							{
+								href:url,
+								html: " <span style='font-size:70%'> [RDB Generated] </span> ",
+								css: {	color:"blue"
+									 }
+							}).append($("<b>", {text:genlinktype.site + ": " + videoID}));
+				//haslink.prepend(newlink);
+
+				var rdbgl = $("<div>",
+								{
+									css: {	padding: "2px",
+											border:"solid #4040a0 1px"
+										 },
+									id: tehID,
+									class: "rdb_link"
+								});
+				rdbgl.append(icon);
+				rdbgl.append(newlink);
+				
+				var extants = comment.find(".rdb_link");
+				if (extants.length)
+				{
+					extants.last().css("border-bottom", "none");
+					rdbgl.css("border-top", "none");
+					extants.last().after(rdbgl);
+				}
+				else
+				{
+					comment.prepend(rdbgl);
+				}
+									
+			}
+		}
+	}
+};
+
+function convert2links()
+{	
+	// get comments from the page itself
+	var comments = $(".comment-text");
+	for (var n = 0; n<comments.length; n++)
+	{
+		var comment = $(comments[n]);
+		var text = comment.text();
+		_sR_checkOpts.commentEL = comment;
+		
+		var uname = comment.parent().find(".yt-user-name");
+		var author = null;
+		if (uname.length > 0)
+		{
+			uname  = uname[0];
+			author = $(uname).text();
+		}
+		else
+		{
+			author = "unknown";
+		}
+	
+		
+		rdb_spider.checkTextForClues(text, _sR_checkOpts)
+	}
+}
+/*
+function convert2linksOld(){
 	// console.log("sR103: checking for links to convert");
 	
 	for (genlinktypename in genericVideoLinkTypes)
@@ -383,7 +479,7 @@ function convert2links(){
 		}
 	}
 }
-
+*/
 ///////////////////////////////
 // RDB MODULE (will move to responsedb.js)
 ///////////////////////////////

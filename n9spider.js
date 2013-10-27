@@ -1990,7 +1990,7 @@ N9YTSpiderLib.prototype = {
     	var timestamp = extrainfo.timestamp ? extrainfo.timestamp: null;
     	var source = extrainfo.source ? extrainfo.source: "spider.checkTextForClues";
     	var author = extrainfo.author ? extrainfo.author: null;
-    	var clueCallback = extrainfo.callback ? extrainfo.callback: null;
+    	var clueCallback = extrainfo.callback ? extrainfo.callback: null; 
     	for (genlinktypename in genericVideoLinkTypes)
 		{
 			var genlinktype = genericVideoLinkTypes[genlinktypename];
@@ -2050,6 +2050,11 @@ N9YTSpiderLib.prototype = {
 										clue.author = author;
 									}
 									rdb_spider.addClue(clue);
+									if (extrainfo && ("callback" in extrainfo))
+									{
+										extrainfo.callback.call(extrainfo, clue);
+										
+									}
 								}
 							}	
 						}
