@@ -1,0 +1,175 @@
+I am not really sure what it is you are trying to achieve. It sounds
+like you want to use your own server. My worry is that you would spend
+ages building something but you might find it hard to get people to use
+it. I am also quite happy with the simplicity of my tool as it is. I do
+plan to add a couple of things but not much.
+
+For know what I suggest is you go ahead a build some of the
+functionality you want and learn how to build the extensions. Use my
+code as is or modify it or just use it for learning how to build if you
+like.I would like to keep the "/watch" name for my own extension so if
+you wouldn't mind calling yours something different. Lets see what you
+come up. Would recommend getting a few people to install and test as you
+develop if you can. Fred (Conference Report) helped me a bit with
+testing and suggestions. Nothing wrong with there being multiple tools
+available so people can choose. I kinda wish these things to go the way
+of things like ad blockers where everyone who makes YT vids knows about
+them and has one installed.
+
+Below is a whole bunch of stuff that should help get you started if you
+haven't already. Believe me they are so easy to build. I am an pretty
+average coder and I found them surprisingly straight forward.
+
+Let me know if you have any questions I would be happy to try and help.
+Here's all the latest unpacked versions in case they are useful:
+
+https://dl.dropboxusercontent.com/u/54011052/
+watch_video_responder_5_Oct_2014.zip
+
+Cheers,
+
+Paul
+
+----------
+
+
+FIRST SOME USEFUL LINKS
+
+--Chrome (and Opera 15-16)
+http://developer.chrome.com/extensions/getstarted.html
+http://developer.chrome.com/extensions/extension.html
+
+--Firefox https://addons.mozilla.org/en-US/developers/builder
+https://addons.mozilla.org/en-US/developers/docs/sdk/latest/
+
+--Safari
+https://developer.apple.com/library/safari/documentation/Tools/
+Conceptual/SafariExtensionGuide/Intro
+
+duction/Introduction.html
+
+
+Recommend just starting with the Chrome "getting started" link to
+familiarise yourself with building
+
+extensions. I was surprised at how easy is is. Under
+chrome://extensions/ just click developer mode.
+
+This lets you load unpacked extension. Really easy to test.
+
+Notice there is a link for each extension when you click developer mode
+- "Inspect views:
+
+_generated_background_page.html". You will need that page to debug. I
+just used the standard Chrome
+
+debugger.
+
+For firefox I used the https://builder.addons.mozilla.org. You can
+download the sdk if you like but
+
+I just found it easier to use the buidler site.
+
+
+Note that the 3 different browsers have slightly different names for the
+same things.
+
+--The button in the browser: Chrome calls this browser_action (there is
+also page action but FF and Safari don't have these I
+
+don't think. /watch uses the page action because it only appplies to
+certain website pages). Firefox calls it a "widget". Safari calls it a
+"toolbar item"
+
+--Popups (when you click the button): Chrome calls it a "default_popup"
+Firefox calls it a "panel" Safari calls it a "popover"
+
+--Background pages - these are like hidden pages that run all the time.
+Chrome calls this "background" (can be a page or just a js file) Firefox
+its just the main.js file in the lib folder Safari calls it "Global
+Page".
+
+--Variable Storage (I used the most basic storage possible - Chrome does
+have a better one available
+
+called chrome.storage where I think you can store arrays but I would
+check other browsers): Chrome calls it localstorage Firefox calls it
+simple-storage Safari calls it settings (safari.extension.settings)
+
+-- Content Scripts (the code that runs in the website pages) Chrome
+calls these "Content_Scripts" Firefox calls these "page-mod" Safari
+calls these "Injected Extension Content"
+
+
+--Manifests / Setting up the various elements Chrome has a manifest json
+text file for automatically creating the above things. Safari is very
+similar but rather than editing a text file there is an extension helper
+form built
+
+right into safari which generates an xml file for you. Firefox is
+slightly different in that you import (require) and declare all your
+extension elements
+
+in code. See my main.js file in the Firefox lib folder.
+
+
+-- Passing data between background pages and injected pages. All 3
+browser sandbox injected scripts and background/popup pages. So you need
+to use event
+
+listeners and recievers to pass data between each one. You can pass
+objects as I did with settings.
+
+So its pretty easy. They are all slightly different but similar enough
+really. Chrome has sendMessage() AND sendRequest() Firefox has
+port.emit() AND port.on() Safari has addEventListener() AND
+dispatchMessage();
+
+
+---ADVICE SUBMITTING YOUR EXTENSION Chrome is awesome. No messing no
+checking. It gets published within an hour. Think it is all
+
+automated. My Opera version despite being identical got rejected as did
+my firefox one. The reason was
+
+unsanitised string data in my jquery .html() and .append() calls.
+
+E.g. IN JQUERY DO THIS:
+
+var linkContainer = $("<div>", { class: "ytcl_link_container". text:
+"hello world"}); $("body").html(linkContainer)
+
+
+AND DON'T DO IT LIKE THIS: $("body").html("<div
+class="ytcl_link_container">hello world</div>")
+
+Opera and Firefox both only tool a couple of days for the extension to
+be checked and
+
+approved/rejected so not too bad.
+
+For safari it was a real pain. You need to sign up and get a signed
+certificate before you can even
+
+start to build. I am on a PC only and the apple instructions only give
+info for Mac development. If
+
+you have access to a mac just folllow the instructions about apple
+keychain access. If not then I
+
+will dig out what I did and let you know.
+
+And of course I have submitted to the safari extension gallery but you
+just get an email saying
+
+apple won't contact you again. I have no idea if or when my extension
+will be approved or rejected.
+
+I really think apple have messed this up. They charge devlopers $99 a
+year to develop for iphone.
+
+How they get away with that I don't know. At least building extensions
+is free.
+
+Oh btw...for chrome you need a developer account. Just a one of $5
+payment so nothing major.

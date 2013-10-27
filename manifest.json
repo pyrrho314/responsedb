@@ -1,0 +1,32 @@
+{
+   "background": {
+      "scripts": [ "background.js" ]
+   },
+   "browser_action": {
+      "default_icon": "icon.png",
+      "default_popup": "popup.html",
+      "default_title":  "Indexes response links from the description and comments. Also adds some information to youtube pages, which can be configured to the user's preference."
+   },
+   "content_scripts": [ {
+      "css": ["summarizeResponses.css"], 
+      "js": [ "jquery.js", "novem.js", "morsels.js", "n9spider.js", "summarizeResponses.js"],
+      "matches": [ "*://www.youtube.com/watch*", "*://www.youtube.com/all_comments*" ]
+   } ],
+   "description": "This extension keeps track of the responses to the videos you have watched, recognized by links in comments. There is also a short set of commands that can precede the link to characterize the nature of the response.",
+   "icons": {
+      "128": "icon128.png",
+      "16": "icon16.png",
+      "48": "icon48.png"
+   },
+   "manifest_version": 2,
+   "name": "ResponderDB",
+   "permissions": [ "tabs",
+   					"http://www.youtube.com/*", 
+   					"https://www.youtube.com/*", 
+   					"http://gdata.youtube.com/*", 
+   					"https://gdata.youtube.com/*" 
+   				  ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "9.0.0.0",
+   "web_accessible_resources": [ "ajax-loader.gif", "icon48.png", "icon128.png","icon.png", "arrowUp.png", "arrowDown.png" ]
+}
