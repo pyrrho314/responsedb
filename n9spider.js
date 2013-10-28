@@ -1185,7 +1185,7 @@ rdbGenericVideoLinkTypes = {
 	watchlink: { 	site: "Youtube Watchlink",
 				indicator: "watch?v=",
 				protocol: "youtube2013",
-				regex: /(watch\?v=(.*?))\s/g,
+				regex: /\/?(watch\?v=(.*?))\s/g,
 				rcolor: "lightGray",
 				mkURL: function (groups)
 						{
@@ -1524,6 +1524,7 @@ N9YTSpiderLib.prototype = {
     			"content_scan",
     			"default"
     		];
+    	console.log("spid1526:", clue);
     	if (clue.URL in this.clues_by_url)
     	{
     		var stored_clue = this.clues_by_url[clue.URL];
@@ -1991,6 +1992,10 @@ N9YTSpiderLib.prototype = {
     	var source = extrainfo.source ? extrainfo.source: "spider.checkTextForClues";
     	var author = extrainfo.author ? extrainfo.author: null;
     	var clueCallback = extrainfo.callback ? extrainfo.callback: null; 
+    	var estimated_timestamp = extrainfo.estimated_timestamp ? extrainfo.estimated_timestamp: null;
+    	
+    	
+    	console.log("spid1997: checkTextForClues", estimated_timestamp, extrainfo);
     	for (genlinktypename in genericVideoLinkTypes)
 		{
 			var genlinktype = genericVideoLinkTypes[genlinktypename];
@@ -2044,6 +2049,10 @@ N9YTSpiderLib.prototype = {
 									if (timestamp)
 									{
 										clue.timestamp = timestamp;
+									}
+									if (estimated_timestamp)
+									{
+										clue.estimated_timestamp = timestamp;
 									}
 									if (author)
 									{

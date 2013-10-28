@@ -251,6 +251,16 @@ var _sR_checkOpts = {
 	author: "anonymous",
 	
 	callback: function (clue){
+		if (!this.count)
+		{
+			this.count = 1;
+		}
+		else
+		{
+			this.count++;
+		}
+		console.log("sR262: %%%%%%%%%%%%%%", this.count);
+		return; 
 		var elID = url2id(clue.URL, "rdb_clue_link");
 		var url = clue.URL;
 		var videoID = clue.videoID;
@@ -291,7 +301,7 @@ var _sR_checkOpts = {
 									css: {	padding: "2px",
 											border:"solid #4040a0 1px"
 										 },
-									id: tehID,
+									id: elID,
 									class: "rdb_link"
 								});
 				rdbgl.append(icon);
@@ -314,17 +324,74 @@ var _sR_checkOpts = {
 	}
 };
 
-function convert2links()
+function timeago2time(timeago)
+{
+	// convert youtube comment "time ago string" to date approximation.
+	timeago = $.trim(timeago);
+	var terms = timeago.split(" ");
+	var quantity = parseInt(terms[0]);
+	var units = terms[1];
+	if (terms[2] != "ago")
+	{
+		return 0;
+	}
+	//c/onsole.log("xr331:", timeago);
+	//c/onsole.log("sR332:", terms);
+	var timestamp = new Date().getTime();
+	
+	switch(units)
+	{
+		case "second":
+		case "seconds":
+			timestamp  -= (quantity *1000);
+			break;
+		case "minute":
+		case "minutes":
+			timestamp -= (quantity * 60000);
+			break;
+		case "hour":
+		case "hours":
+			timestamp -= (quantity * 360000);
+			break;
+		case "week":
+		case "weeks":
+			timestamp -= (quantity *	 604800000);
+			break;
+		case "month":
+		case "months":
+			timestamp -= (quantity * 2.62974e9);
+			break;
+		case "years":
+		case "year":
+			timestamp -= (quantity * 3.15569e10);
+			break;
+	}
+	
+	return timestamp;
+}
+var _sR_numcomments = 0;
+function convert2linksNEW()
 {	
+	
 	// get comments from the page itself
 	var comments = $(".comment-text");
+	//c/onsole.log("sR323: ",comments.length, "comments in page");
+	if (comments.length == _sR_numcomments)
+	{
+		return;
+	}
+	else
+	{
+		_sR_numcomments = comments.length;
+	}
 	for (var n = 0; n<comments.length; n++)
 	{
+		//c/onsole.log("sR324: comment", n, "of", comments.length);
 		var comment = $(comments[n]);
 		var text = comment.text();
 		_sR_checkOpts.commentEL = comment;
 		
-		var uname = comment.parent().find(".yt-user-name");
+		var uname = $(comment.parent().find("p.metadata > .author > .yt-user-name")[0]);
 		var author = null;
 		if (uname.length > 0)
 		{
@@ -335,13 +402,19 @@ function convert2links()
 		{
 			author = "unknown";
 		}
-	
+		_sR_checkOpts.author = author;
+		
+		var ytime = $(comment.parent().find("p.metadata > .time > a")[0]);
+		//c/onsole.log("CGE RULES:", ytime.text());
+		if (ytime.length)
+			_sR_checkOpts.estimated_timestamp = timeago2time(ytime.text());
+		
 		
 		rdb_spider.checkTextForClues(text, _sR_checkOpts)
 	}
 }
-/*
-function convert2linksOld(){
+
+function convert2linksOLD(){
 	// console.log("sR103: checking for links to convert");
 	
 	for (genlinktypename in genericVideoLinkTypes)
@@ -479,7 +552,12 @@ function convert2linksOld(){
 		}
 	}
 }
-*/
+
+// development switch for refactoring convert2liinks
+convert2links = convert2linksNEW;
+
+
+
 ///////////////////////////////
 // RDB MODULE (will move to responsedb.js)
 ///////////////////////////////
@@ -493,7 +571,7 @@ function rdb_clue_div(clue, options)
 	{
 		console.log("sR371 clue", clue);
 	}
-	  /*
+	/*
 	var icon = $("<img>",
 				{
 					src: iconURL,
@@ -518,7 +596,7 @@ function rdb_clue_div(clue, options)
 	var rcolor = clue.rcolor ? clue.rcolor: "white";
 	
 	var linklabel = $("<span>",
-					{	html:"<br clear='all'/>direct link &rarr; ",
+					{	html:"link &rarr; ",
 						css: {	fontSize:"85%",
 								paddingLeft:"10px"
 							 }
@@ -537,14 +615,14 @@ function rdb_clue_div(clue, options)
 	//// CREATE THE RETURNED DIV
 	//// CREATE THE RETURNED DIV
 	var rdbgl = $("<div>",
-					{
-						css: {	padding: "2px",
-								border:"solid #4040a0 1px",
-								//backgroundColor:backcolor
-							 },
-						class: url2id(videoID,"clue")
-							 + " rdb_link"
-					});
+				{
+					css: {	padding: "2px",
+							border:"solid #4040a0 1px",
+							//backgroundColor:backcolor
+						 },
+					class: url2id(videoID,"clue")
+						 + " rdb_link"
+				});
 	//// CREATE THE RETURNED DIV
 	//// CREATE THE RETURNED DIV
 	//// CREATE THE RETURNED DIV
@@ -567,14 +645,18 @@ function rdb_clue_div(clue, options)
 	
 	
 	///// COMMENT TIME ELEMENT
-	var commenttime = clue.timestamp ? clue.timestamp : null;
+	console.log("sR648: clue_div", clue);
+	var commenttime = clue.timestamp ? 
+						clue.timestamp : 
+						clue.estimated_timestamp ?
+						clue.estimated_timestamp: null;
 	if (commenttime)
 	{
 		var timestamp = $("<div>",
 						{	css: {
 									float:"right",
 								 },
-							text: new Date( commenttime).toLocaleString()
+							text: new Date(commenttime).toLocaleString()
 							
 						}
 					 );
@@ -582,49 +664,6 @@ function rdb_clue_div(clue, options)
 		rdbgl.attr("data-timestamp", commenttime);
 		console.log("sR392: commenttime", commenttime);
 	}
-	
-	///// PROVNOTES
-	/////
-	var provnotes = $("<div>", 
-					{	
-					});
-					
-	///// SOURCE DISPLAY ELEMENT
-	var source = clue.source ? clue.source : "unidentified"
-	var sourceel = $("<div>",
-					{	text: source.split(".")[0],
-						css:{ 	float: "left",
-								fontSize:"70%",
-								color: "white",
-								backgroundColor: "black",
-								padding:"1px",
-								margin:"1px"
-							}
-					})
-	provnotes.append(sourceel);
-	
-	///// SOURCE DISPLAY ELEMENT
-	var site = clue.site ? clue.site : null;
-	if (site)
-	{
-		var siteel = $("<div>",
-					{	text: site,
-						css:{ 	float: "left",
-								fontSize:"70%",
-								color: rcolor,
-								backgroundColor: "black",
-								padding:"1px",
-								margin:"1px"
-							}
-					})
-		provnotes.append(siteel);
-	}
-	rdbgl.append(provnotes);
-	//rdbgl.append(rlabel);
-	rdbgl.append(linklabel);
-	rdbgl.append(newlink);
-	
-	
 	if (clue.content)
 	{
 		var cont = $("<div>",
@@ -638,6 +677,51 @@ function rdb_clue_div(clue, options)
 					});
 		rdbgl.append(cont);
 	}
+	///// PROVNOTES
+	/////
+	var provnotes = $("<div>", 
+					{
+					});
+					
+	///// SOURCE DISPLAY ELEMENT
+	var source = clue.source ? clue.source : "unidentified"
+	var sourceel = $("<div>",
+					{	text: source.split(".")[0],
+						css:{ 	//float: "left",
+								display: "inline-block",
+								fontSize:"70%",
+								color: "white",
+								backgroundColor: "#8008080",
+								padding:"1px",
+								margin:"1px"
+							}
+					})
+	provnotes.append(sourceel);
+	
+	///// SOURCE DISPLAY ELEMENT
+	var site = clue.site ? clue.site : null;
+	if (site)
+	{
+		var siteel = $("<div>",
+					{	text: site,
+						css:{ 	//float: "left",
+								display: "inline-block",
+								fontSize:"70%",
+								color: rcolor,
+								backgroundColor: "#505050",
+								padding:"1px",
+								margin:"1px"
+							}
+					})
+		provnotes.append(siteel);
+	}
+	//rdbgl.append(rlabel);
+	rdbgl.append(linklabel);
+	rdbgl.append(newlink);
+	
+	rdbgl.append(provnotes);
+	
+	
 	
 	return rdbgl;
 }
@@ -709,10 +793,11 @@ var target = document.querySelector('#watch-discussion');
 
 // create an observer instance
 var observer = new MutationObserver(function(mutations) {
+	//alert("asdf");
   mutations.forEach(function(mutation) {
     if (mutation.type != "attributes")
     {
-    	//c onsole.log("sR159:",mutation.type);
+    	//console.log("sR159:",mutation,mutation.type);
   	}
   });
   var location= $("#comments-view"); //$("#watch-discussion");
@@ -723,13 +808,21 @@ var observer = new MutationObserver(function(mutations) {
 		location.before(rdb_summary_DIV);
 		rdb_summary_div_ready = true;
 		var showhide = $("#showhideSummaryButton");
-		console.log("sR514: ",summary.length); 
+		//c/onsole.log("sR514: ",summary.length); 
 		mkShowHideRight.call(showhide);
+  		mutations.forEach(function(mutation) {
+			if (mutation.type != "attributes")
+			{
+				console.log("sR159:",mutation,mutation.type);
+			}
+		  });
+  		//alert("stop");
   }
   convert2links(); 
+  		
 });
 
-var opts =  {attributes:true, subtree:true};
+var opts =  {childList:true, attributes:false, subtree:true};
 //c/onsole.log("sR413:",observer.observe);
 observer.observe(target,opts);
 
