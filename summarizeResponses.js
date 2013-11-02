@@ -25,6 +25,8 @@ chrome.runtime.sendMessage({greeting: "sendhighlightsetting"}, function(response
 });
  */
 
+var spidername = "robot";
+var spideridleterm = " ready";
 var iconURL = chrome.extension.getURL("icon48.png");
 
 var insertEL = $("<div>",
@@ -93,39 +95,81 @@ var summary = $("<div>",
 						css:{paddingBottom: "10px",
 							 paddingTop: "10px",
 							 overflow:"hidden"
-							}
+							
+							},
 					}
 				);
 				
-var usercursecommentsEL = $ ("<input>",
+
+/// FLOATING RIGHT: scan controls
+var userscanyoutubeEL = $ ("<input>",
 				 	{	type:	"submit",
-				 		class:  "USERdbCurseComments",
-				 		id: 	"rdb_UdbCCButton",
-				 		value: 	"scan comments",
-				 		css: {	"margin-right":"58px",
+				 		class:  "USERscanYTVideo",
+				 		id: 	"rdb_UdbScanYTVideo",
+				 		value: 	"scan youtube video",
+				 		
+				 		css: {	"margin-right":"10px",
 				 				"margin-top":"14px",
 				 				border:"solid gray 1px",
 				 				float:"right",
-				 				fontSize: "60%",
-				 				width:"10em"
+				 				fontSize: "70%",
+				 				width:"12em"
+				 			 }
+				 	}
+				 );
+summary.append(userscanyoutubeEL);
+
+var usercursecommentsEL = $ ("<input>",
+				 	{	type:	"submit",
+				 		class:  "USERdbCurseVideo",
+				 		id: 	"rdb_UdbCCButton",
+				 		value: 	"retrieve previous scan",
+				 		
+				 		css: {	"margin-right":"10px",
+				 				"margin-top":"14px",
+				 				border:"solid gray 1px",
+				 				float:"right",
+				 				fontSize: "70%",
+				 				width:"12em"
 				 			 }
 				 	}
 				 );
 summary.append(usercursecommentsEL);
 
-usercursecommentsEL.click( function (event)
+
+
+
+/// eof FLOATING RIGHT SCANNER CONTROLS
+userscanyoutubeEL.click( function (event)
 	{
 		var vid = rdbGetVideoIDFromURL();
 		console.log("sR118:", vid);
-		/*n9spider_yt_videoscan(vid, function (event)
+		n9spider_yt_videoscan(vid, function (event)
 			{
-				console.log("sR122: completed videoscan for usercursecommentsEL");
+				console.log("sR148: completed youtube video scan");
 			}
-		);*/
+		);
 	}
 );
+usercursecommentsEL.click( function (event)
+	{	
+		var vid = rdbGetVideoIDFromURL();
+		var extants = $(".rdb_link");
+		extants.css({
+						"border-left-style":"dashed",
+						"border-right-style":"dashed"
+					});
+		n9spider_idb_videoscan(vid, 
+			{complete: 
+				function (event)
+					{
+						console.log("sR158: completed idb video retrieval");
+					}
+			}
+		);
+	});
 var ytsummaryTitle = $("<div>",
-						{	css:{ textDecoration:"underline" },
+						{	css:  { textDecoration:"underline" },
 							text: "Youtube Responses"
 						});
 var ytsummary = $("<div>",
@@ -149,6 +193,31 @@ summary.append(othersummary);
 summary.hide();
 
 //rstitle.append(showhide);
+var spiderActivityEL = $("<div>", {
+							class:"spider_acts",
+							css:{"border":"solid green 1px",
+									padding: "2px",
+									margin : "10px",
+									marginBottom:"0px",
+									float: "right",
+									width:"200px",
+									textAlign: "center",
+									height:"38px",
+									overflow: "hidden",
+									fontSize:"80%"
+								},
+						});
+var spiderStateEl = $("<div>",
+						{	class: "spider_state",
+							text: spidername + " " + spideridleterm,
+							css: { 	margin:"1px",
+									padding:"1px",
+									border:"solid darkBlue 1px"
+								 }
+						});
+spiderActivityEL.append(spiderStateEl);
+
+insertEL.append(spiderActivityEL);
 insertEL.append( showhide);
 showhide.data("opened", showhideOpened);
 
@@ -182,8 +251,8 @@ mkTextRight.call(showhide);
 function mkShowHideRight ()
 {
 	var opened = $(this).data("opened");
-	console.log("sR163:showhideright", opened);
-	console.trace();
+	//c/onsole.log("sR163:showhideright", opened);
+	//c/onsole.trace();
 	var rdbs = $(".rdbSummary");
 	if (opened)
 	{
@@ -236,7 +305,7 @@ showhide.click(function ()
 		
 		// SAVE THIS state
 		localStorage["rdb_showhide_state"] = newstate; 
-		
+		this.blur();
 	}
 );
 			
@@ -259,7 +328,7 @@ var _sR_checkOpts = {
 		{
 			this.count++;
 		}
-		console.log("sR262: %%%%%%%%%%%%%%", this.count);
+		console.log("sR262: clue callbacks from check comments %%%%%%%%%%%%%%", this.count);
 		return; 
 		var elID = url2id(clue.URL, "rdb_clue_link");
 		var url = clue.URL;
@@ -348,27 +417,38 @@ function timeago2time(timeago)
 		case "minute":
 		case "minutes":
 			timestamp -= (quantity * 60000);
+			timestamp -= (timestamp % 60000);
 			break;
 		case "hour":
 		case "hours":
 			timestamp -= (quantity * 360000);
+			timestamp -= (timestamp % 360000);
+			break;
+		case "day":
+		case "days":
+			timestamp -= (quantity * 86400000);
+			timestamp -= (timestamp % 86400000);
 			break;
 		case "week":
 		case "weeks":
 			timestamp -= (quantity *	 604800000);
+			timestamp -= (timestamp % 604800000);
 			break;
 		case "month":
 		case "months":
 			timestamp -= (quantity * 2.62974e9);
+			timestamp -= (timestamp % 2.62974e9);
 			break;
 		case "years":
 		case "year":
 			timestamp -= (quantity * 3.15569e10);
+			timestamp -= (timestamp % 3.15569e10);
 			break;
 	}
 	
 	return timestamp;
 }
+
 var _sR_numcomments = 0;
 function convert2linksNEW()
 {	
@@ -562,14 +642,16 @@ convert2links = convert2linksNEW;
 // RDB MODULE (will move to responsedb.js)
 ///////////////////////////////
 //   rdb_clue_div
+var _sR_clue_div_id = 0;
 function rdb_clue_div(clue, options)
 {
+	_sR_clue_div_id++;
 	var videoID = clue.videoID;
 	
 	var tehurl = clue.URL;
 	if (clue.source != "content_scan")
 	{
-		console.log("sR371 clue", clue);
+		//console.log("sR371 clue", clue);
 	}
 	/*
 	var icon = $("<img>",
@@ -597,6 +679,7 @@ function rdb_clue_div(clue, options)
 	
 	var linklabel = $("<span>",
 					{	html:"link &rarr; ",
+						class: "clue_link_label",
 						css: {	fontSize:"85%",
 								paddingLeft:"10px"
 							 }
@@ -605,6 +688,7 @@ function rdb_clue_div(clue, options)
 	var newlink = $("<a>",
 				{
 					href:tehurl,
+					class: "clue_link",
 					css: {	
 						 }
 				}).append($("<b>", {text: tehurl}));
@@ -614,6 +698,7 @@ function rdb_clue_div(clue, options)
 	//// CREATE THE RETURNED DIV
 	//// CREATE THE RETURNED DIV
 	//// CREATE THE RETURNED DIV
+	//console.log("&&&&&&&&&&&&&&&&&&&&&&", clue);
 	var rdbgl = $("<div>",
 				{
 					css: {	padding: "2px",
@@ -628,6 +713,19 @@ function rdb_clue_div(clue, options)
 	//// CREATE THE RETURNED DIV
 	////				
 	//// AUTHOR'S NAME ELEMENT
+	var debugorder = true;
+	if (debugorder)
+	{
+		var order = $("<span>",
+					{
+						text: _sR_clue_div_id,
+						css: { padding:"3px",
+								border:"solid black 1px",
+								margin:"1em"
+							 }
+					});
+		rdbgl.prepend(order);
+	}
 	if (clue.author)
 	{	var author = $("<div>",
 					{	text:clue.author ,
@@ -645,11 +743,9 @@ function rdb_clue_div(clue, options)
 	
 	
 	///// COMMENT TIME ELEMENT
-	console.log("sR648: clue_div", clue);
+	//c/onsole.log("sR648: clue_div", clue);
 	var commenttime = clue.timestamp ? 
-						clue.timestamp : 
-						clue.estimated_timestamp ?
-						clue.estimated_timestamp: null;
+						clue.timestamp : null;
 	if (commenttime)
 	{
 		var timestamp = $("<div>",
@@ -662,12 +758,42 @@ function rdb_clue_div(clue, options)
 					 );
 		rdbgl.append(timestamp);
 		rdbgl.attr("data-timestamp", commenttime);
-		console.log("sR392: commenttime", commenttime);
+		//c/onsole.log("sR392: commenttime", commenttime);
 	}
+	else
+	{  // estimated comment time
+		var commenttime = clue.estimated_timestamp ?
+						            clue.estimated_timestamp: null;
+	
+		if (commenttime)
+		{
+		var timestamp = $("<div>",
+						{	css: {
+									float:"right",
+								 },
+							text: new Date(commenttime).toLocaleString() + " (estimated)"
+							
+						}
+					 );
+		rdbgl.append(timestamp);
+		rdbgl.attr("data-timestamp", commenttime);
+		//c/onsole.log("sR392: estimated commenttime", commenttime);
+		}
+	}
+	//
+	//////
+	
+	
+	
 	if (clue.content)
 	{
+		// first, make the matched text a link.
+		
+		var content = clue.content;
+		content = content.replace(clue.match, "<a href='"+tehurl+"'>"+clue.match+"</a>");
 		var cont = $("<div>",
-					{	text: clue.content,
+					{	html: content,
+						class: "comment_content",
 						css: {
 								border:"solid gray 1px",
 								margin:"2px",
@@ -682,23 +808,32 @@ function rdb_clue_div(clue, options)
 	var provnotes = $("<div>", 
 					{
 					});
-					
+	///////////
+	//
+	//  ///////   //    //////  //////
+	//    //    // //  //      /// 
+	//	 //   /////// // ////     ///
+	//  //   //   // /////// ///////
+	// 	
 	///// SOURCE DISPLAY ELEMENT
 	var source = clue.source ? clue.source : "unidentified"
+	var sourcekey = source.split(".")[0];
 	var sourceel = $("<div>",
-					{	text: source.split(".")[0],
+					{	text: sourcekey,
 						css:{ 	//float: "left",
 								display: "inline-block",
 								fontSize:"70%",
 								color: "white",
-								backgroundColor: "#8008080",
+								backgroundColor: "#808080",
 								padding:"1px",
+								paddingLeft:"3px",
+								paddingRight:"3px",
 								margin:"1px"
 							}
 					})
 	provnotes.append(sourceel);
 	
-	///// SOURCE DISPLAY ELEMENT
+	///// SITE DISPLAY ELEMENT
 	var site = clue.site ? clue.site : null;
 	if (site)
 	{
@@ -710,11 +845,21 @@ function rdb_clue_div(clue, options)
 								color: rcolor,
 								backgroundColor: "#505050",
 								padding:"1px",
+								paddingLeft:"3px",
+								paddingRight:"3px",
 								margin:"1px"
 							}
 					})
 		provnotes.append(siteel);
 	}
+	
+	
+	
+	//
+	//
+	//
+	//
+	// 
 	//rdbgl.append(rlabel);
 	rdbgl.append(linklabel);
 	rdbgl.append(newlink);
@@ -730,7 +875,7 @@ function rdb_clue_div(clue, options)
 function rdbInsertClueSorted(parentdiv, newdiv)
 {
 	// SPECIAL CASE: no children in summary yet.
-	var childs = parentdiv.find(".rdb_link");
+	var childs = parentdiv.children(".rdb_link"); // children is to ignore nested double votes
 	//c/onsole.log("sR473: insert sorted... #of rdb_links", childs.length);
 	if (childs.length == 0)
 	{
@@ -743,7 +888,7 @@ function rdbInsertClueSorted(parentdiv, newdiv)
 	var timeattr = newdiv.attr("data-timestamp");
 	var last = parentdiv.children().last();
 	
-	console.log("sR481: insert sorted", timeattr);
+	//c/onsole.log("sR481: insert sorted", timeattr);
 	var timestamp = parseInt(timeattr);
 	
 	if (! timestamp)
@@ -792,6 +937,9 @@ function rdbGetURLParm ( key ) {
 var target = document.querySelector('#watch-discussion');
 
 // create an observer instance
+
+var _sR_scan_html_for_comments = false;
+
 var observer = new MutationObserver(function(mutations) {
 	//alert("asdf");
   mutations.forEach(function(mutation) {
@@ -818,8 +966,10 @@ var observer = new MutationObserver(function(mutations) {
 		  });
   		//alert("stop");
   }
-  convert2links(); 
-  		
+  if (_sR_scan_html_for_comments)
+  {
+  		dconvert2links(); 
+  }		
 });
 
 var opts =  {childList:true, attributes:false, subtree:true};
@@ -845,21 +995,23 @@ function rdbGetVideoIDFromURL()
 }
 ////// SCAN VIDEO AT SITE
 
+var _N9_SCANONSTART = false
 _njn.register("idb_connected", function (event)
 	{
-
+		if (!_N9_SCANONSTART)
+		{ return;}
 		var vidid = rdbGetVideoIDFromURL();
 
-		console.log("sR440:", window.location.href, vidid);
-		n9spider_l2s_videoscan(vidid, 
-			function ()
-			{
-				console.log("sR443: scan success", this);
-				rdb_spider.dbCurseComments({video_id:this.videoID});
-				
-				// this.n9video.yt_scan_comments();
+		n9spider_idb_videoscan(vidid, 
+			{complete: 
+				function ()
+				{
+					console.log("sR443: scan success", this, rdb_spider);
+					
+					// this.n9video.yt_scan_comments();
+				}
 			}
-			);
+		);
 	}
 );
 function user_caused_dbCurseComments()
@@ -867,11 +1019,11 @@ function user_caused_dbCurseComments()
 	var vidid = rdbGetVideoIDFromURL();
 
 	console.log("sR505: user_caused_dbCurseComments", window.location.href, vidid);
-	n9spider_l2s_videoscan(vidid, 
+	n9spider_idb_videoscan(vidid, 
 		function ()
 		{
 			console.log("sR443: scan success", this);
-			rdb_spider.dbCurseComments({video_id:this.videoID});
+			//rdb_spider.dbCurseComments({video_id:this.videoID});
 		
 			// this.n9video.yt_scan_comments();
 		}
@@ -889,13 +1041,37 @@ function rdbProcessClue(cmd, clue)
 {
  	//c/onsole.log("sR445:", clue);
 	var clueEL = $("."+url2id(clue.videoID, "clue"));
+	var tehdiv = rdb_clue_div(clue);
 	if (clueEL.length)
 	{
-		clueEL.css("opacity", ".5");
-		clueEL.css("background-color","lightYellow");
-		clueEL.hide();
-		console.log("sR695:", clue);
+		//clueEL.css("border-color", "red");
+		//clueEL.css("background-color","lightYellow");
+		//clueEL.hide();
+		//c/onsole.log("sR695:", clue);
 		//return;
+		var rdboths = rdb_summary_div.find(".rdbOtherSummary");
+		
+		var tehdiv = rdb_clue_div(clue);
+		//c onsole.log("sR483:", cmd, clue);
+		rdbInsertClueSorted(rdboths, tehdiv);	
+		var clueset = $("."+url2id(clue.videoID, "clue"));
+		clueset.detach();
+		var newclue = $(clueset[0]);
+		var duplclue = $("<div>",
+						{	css:{
+									margin:"5px",
+									marginLeft:"30px"
+								}
+						});
+		var subset = clueset.slice(1);
+		subset.css({"border": "none",
+					"border-left":"solid black 1px"
+					});
+		subset.find(".clue_link, .clue_link_label").remove();
+		duplclue.append(subset);
+		newclue.append(duplclue);
+		
+		tehdiv = newclue;
 	}
 		
  	if (false) //clue.protocol == "youtube2013")
@@ -916,7 +1092,6 @@ function rdbProcessClue(cmd, clue)
 	}
 	else
 	{
-		var tehdiv = rdb_clue_div(clue);
 		var source = clue.source ? clue.source : "default";
 		if (source == "default")
 		{
@@ -926,7 +1101,7 @@ function rdbProcessClue(cmd, clue)
 		{
 			tehdiv.css("background-color","#e0f0e0");
 		}
-		else if (source.indexOf("spider.") >= 0)
+		else if (source.indexOf("idb.") >= 0)
 		{
 			tehdiv.css("background-color","#e0e0ff");
 		}
@@ -944,3 +1119,86 @@ _njn.register("clue_new",
 _njn.register("clue_update", 
 				function (clue) { rdbProcessClue("clue_update",clue);}
 			 );
+
+_njn.register("spider_event",
+		function(event)
+		{
+			//console.log("sR1035: spider event",event)
+			var spidact = $(".spider_acts");
+			var etype = event.event
+			switch (etype)
+			{
+				case "comment_scan":
+					var author = event.comment.get("author");
+					var comment = event.comment;
+					var content = comment.get("content");
+					var msg = "comment by "+event.comment.get("author");
+					if (author == "pyrrho314" && (content.indexOf("cute") >=0))
+					{
+						console.log("sR1049:",comment.get("content"),comment);
+					
+					}
+					showSpiderMsg(msg)
+					break;
+				case "found_clue":
+					var clue = event.clue;
+					showSpiderMsg("found clue "+ clue.author, {color:"red"});
+					break;
+				default:
+					showSpiderMsg(event.event)
+			}
+			
+			showSpiderState(event);
+		}
+		);
+		
+function showSpiderState(event)
+{
+	var spact = $(".spider_acts");
+	var spate = $(".spider_state");
+	var etype = event.event;
+	
+	var msg = ""
+	switch(etype)
+	{
+		case "comment_scan":
+		case "found_clue":
+			return;
+			msg = "scanning " + event.comment.get("video_id");
+			break;
+		case "idb_start_videoscan":
+			msg = "start scan for "+ event.video_id;
+			break;
+		case "idb_finish_videoscan":
+			msg = spideridlemsg;
+			break;
+	
+		default:
+			msg = event.event
+	}
+	spate.text(spidername + " " +msg);
+	
+}
+function showSpiderMsg(msg, css)
+{
+	var spact = $(".spider_acts");
+	var spate = $(".spider_state");
+	var msg = $("<div>",
+				{	text: msg
+				}
+				).hide();
+	if (css)
+	{
+		msg.css(css);
+	}
+	if (spate.length>0) msg.insertAfter(spate);
+		else spact.prepend(msg);
+		
+	msg.slideDown(350, function ()
+						{ $(this).slideUp(850, 
+							function ()
+							{ 
+								$(this).remove();
+							});
+						});
+}

@@ -70,25 +70,55 @@ function n9spider_yt_userscan(username, map, create_domicile)
             });
 }
 
-function n9spider_l2s_videoscan(videoID, complete_func, options)
+
+function n9spider_idb_videoscan(videoID, options)
 {
-	rdb_spider.dbGetVideo(videoID, function ()
-	{
-		var video = this.n9video;
-		var videoID = this.videoID;
-		
-		console.log("spid77:l2s_videoscan", video);
-		if (!video)
+	// @@DOCO: NOTE, I use call and apply to turn option into this a lot!!!!! warning
+	// I need a consistent paradigm but in general it's to give callback access to the
+	// options relating to them. And it's fun.  Self modifying code song time!
+	
+	_njn.execute("spider_event", 
+				{	event:"idb_start_videoscan",
+					video_id: videoID
+				});
+	rdb_spider.dbGetVideo(
+		videoID, 
+		function ()
 		{
-			console.log("spid80: "+this.videoID+" not found in local IDB");
-			n9spider_yt_videoscan(videoID, complete_func, options);
-		}
-		else
-		{
-			console.log("spid84: "+video.get("video_id")+" found in local IDB", video)
-			complete_func.call(this);
-		}
-	}, options);
+			var video = this.n9video;
+			var videoID = this.videoID;
+			var complete_func = this.complete;
+			this.comments_done = complete_func;
+			if (video)
+			{
+				console.log("spid77:idv_videoscan", video);
+				if (video)
+				{
+					var videoID = video.get("video_id");
+					console.log("spid84: "+video.get("video_id")+" found in local IDB", video)
+					rdb_spider.dbCurseComments(
+						 {
+						 	video_id: videoID,
+						 },
+						 {
+						 	foreach: function (comment)
+						 	{
+						 		rdb_spider.checkTextForClues(comment, this);
+						 	},
+						 	complete: function ()
+						 	{
+						 		_njn.execute("spider_event",
+						 					{ event: "idb_finish_videoscan"
+						 					});
+						 		this.comments_done.call(this); // @@this decision
+						 	},
+						 	
+						 }
+					);	
+				}
+			}
+		},
+		options);
 }
 
 function n9spider_yt_videoscan(video_id, complete_func, options)
@@ -128,7 +158,7 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
                     var vid = n9spider_yt_video_from_entry(entry, options);
                     
                     
-                    if (false)
+                    if (true)
                     { //@@ WARNING probably bad for map integration as is
                     	n9spider_yt_videofeed_parse(feed, 
                     						{username:username,
@@ -136,7 +166,7 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
                                              map:  map,
                                              event_time: now,
                                         	 create_domicile: false,
-                                        	 get_comments: options.get_comments
+                                        	 get_comments: get_comments
                                         	});
                     }
                     console.log("spid126:", this);
@@ -251,6 +281,7 @@ function n9spider_yt_videofeed_parse(feed, options)
     console.log("spid18:");
     console.log(feed);
  
+ 	var videoid = n9spider_yt_get_videoid_from_videoentry(feed.entry[0]);
  	
     var entries = feed.entry;
     if (! entries) { return;}
@@ -296,6 +327,13 @@ function n9spider_yt_videofeed_parse(feed, options)
                             username : enclosed_username,
                             video : vid
                         });
+        var numcom = 0;
+        if (videoid in _yt_spiderlib.comments_by_video_id)
+        	{
+        		numcom = _yt_spiderlib.comments_by_video_id[videoid].length;
+        	}
+		console.log("spid319: number comments already ", numcom);
+                    
         function recurseComments(username, commentsurl, max) {
             // @@ NOTE: DOES NOT RECURSE YET!  use setTimeout
             var enclosed_username = username;
@@ -310,9 +348,17 @@ function n9spider_yt_videofeed_parse(feed, options)
                                                     map,
                                                     enclosed_create_domicile);
                     var nexturl = n9spider_yt_getlink(data.feed.link, "next");
-                    
+                	
                         
-                    //c/onsole.log("spid68: next comment url --> "+nexturl);
+                    console.log("spid315: next comment url --> "+nexturl);
+                    console.log("spid316: ", _yt_spiderlib.comments_by_video_id);
+                    console.log("spid317: ", data.feed.entry[0]);
+                    var videoid = n9spider_yt_get_videoid_from_commententry(data.feed.entry[0]);
+                    var numcom = _yt_spiderlib.comments_by_video_id[videoid].length;
+                    console.log("spid319: number comments already ", numcom, "vs", max);
+                    
+                    if (numcom < max && nexturl) 
+                    	setTimeout(recurseComments, 1500, username, nexturl, 250);
                 }
                }
               );
@@ -334,6 +380,18 @@ function n9spider_yt_getlink(links, id, strip_prot)
         }
     }
     return null;
+}
+function n9spider_yt_get_videoid_from_commententry(entry)
+{
+	var vidid = entry.yt$videoid.$t;
+	return vidid
+}
+function n9spider_yt_get_videoid_from_videoentry(entry)
+{
+	var vididurlparts = entry.id.$t.split("/");
+	var vidid = vididurlparts[vididurlparts.length-1];
+	return vidid;
+	
 }
 function n9spider_yt_getcategory(entry)
 {
@@ -442,6 +500,15 @@ function n9spider_yt_feedparse_comments(username, feed, map, create_domicile)
     {
         var commentobj = commentobjs[n];
         var author = commentobj.author[0].name.$t;
+        /*
+        console.log("spid473:&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+        console.log("spid473:&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+        console.log("spid473:&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+        console.log("spid476:", author);
+        console.log("spid477:&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+        console.log("spid477:&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+        console.log("spid477:&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+        */ 
         var author_from_uri = commentobj.author[0].uri.$t.split("/");
         var vidid = feed.id.$t.split("/");
         vidid = vidid[vidid.length-2];
@@ -1519,13 +1586,14 @@ N9YTSpiderLib.prototype = {
     },
     addClue: function (clue)
     {
+    	console.trace();
     	var source_precedence =	
     		[	"spider.checkCommentForClues",
     			"content_scan",
     			"default"
     		];
     	console.log("spid1526:", clue);
-    	if (clue.URL in this.clues_by_url)
+    	if (false) // (clue.URL in this.clues_by_url)
     	{
     		var stored_clue = this.clues_by_url[clue.URL];
     		var old_clue = $.extend({}, stored_clue);
@@ -1579,6 +1647,11 @@ N9YTSpiderLib.prototype = {
     	this.clues[this.clues.length] = clue;
     	
     	_njn.execute("clue_new", clue);
+    	_njn.execute("spider_event",
+    				{
+    					event:"found_clue",
+    					clue:clue
+    				});
     	//console.log("spid1157:", this.clues_by_url);
     	return clue
     },
@@ -2042,6 +2115,8 @@ N9YTSpiderLib.prototype = {
 								{
 									//c onsole.log("spid1944:adding CLUE ", regex, content);
 									clue.content = content;
+									
+									clue.match = groups[0];
 									if (source)
 									{
 										clue.source = source;
@@ -2052,7 +2127,7 @@ N9YTSpiderLib.prototype = {
 									}
 									if (estimated_timestamp)
 									{
-										clue.estimated_timestamp = timestamp;
+										clue.estimated_timestamp = estimated_timestamp;
 									}
 									if (author)
 									{
@@ -2087,13 +2162,24 @@ N9YTSpiderLib.prototype = {
     	var content = comment.get("content");
     	this.checkTextForClues(content, {   author: comment.get("author"),
     										timestamp: comment.get("timestamp"),
-    										source: "spider.checkCommentForClues"
+    										source: "idb.checkCommentForClues"
     									}
     						   );
 	},
-    dbCurseComments: function (query, callback)
+    dbCurseComments: function (query, callback) // deprecated see rdb version
     {
+        var cbtype = typeof(callback);
+        var options = null;
         
+        if (cbtype == "function")
+        {
+        	options = {complete:callback};
+        }
+        else
+        {
+        	options = callback;
+        	callback = options.callback;
+        }
         //c onsole.log("spider: dbcurse comments");
         var spider  = rdb_spider;
         var enc_callback = callback;
@@ -2124,7 +2210,7 @@ N9YTSpiderLib.prototype = {
                 //c onsole.log("spid2066:",cursor.value);
                 var commentmorsel = $.extend(true, {}, cursor.value);
                 var comment = spider.addComment(commentmorsel);
-                if (callback) { callback.call(comment); }
+                if (callback) { callback.call(comment); } // @@THIS DECISION
                 _njn.execute("spider_event", {  event:"comment_scan",
                                 comment:comment,
                                 source: "idb"
@@ -2133,8 +2219,55 @@ N9YTSpiderLib.prototype = {
             }
             else
             {
-                if (callback) { callback()}
+                if (callback) { callback.call(event)} // @@THIS DECISION
+             }
+        }
+    },
+    rdbCurseComments: function (query, options)
+    {
+        //c onsole.log("spider: dbcurse comments");
+        var spider  = rdb_spider;
+        
+        var tx = this.db.transaction("comments");
+        var vidstore = tx.objectStore("comments");
+        var index;
+        var range;
+        if ("video_id" in query )
+        {
+            index = vidstore.index("by_video_id");
+            range = IDBKeyRange.only(query.video_id);
+        }
+        
+        index._rdb_options = options
+        index.openCursor(range).onsuccess = function (event)
+        {
+        	var options = this._rdb_options;
+        	
+        	try
+        	{
+        		rdb_dbg_cursedcommentcount++;
+        	} catch(err)
+        	{
+        		rdb_dbg_cursedcommentcount = 1;
+        	}
+        	//console.log("spid2065:dbCurseComments", dbg_count);
+            var cursor = event.target.result;
+            if (cursor)
+            {
+                //c onsole.log("spid2066:",cursor.value);
+                var commentmorsel = $.extend(true, {}, cursor.value);
+                var comment = spider.addComment(commentmorsel);
+                if (options.foreach) { options.foreach.call(comment); } // @@THIS DECISION
+                _njn.execute("spider_event", {  event:"comment_scan",
+                                comment:comment,
+                                source: "idb"
+                             });
+                cursor.continue();
             }
+            else
+            {
+                if (complete) { options.complete.call(event)} // @@THIS DECISION
+             }
         }
     },
     dbCurseUsers: function (mask, calldata, callback)
