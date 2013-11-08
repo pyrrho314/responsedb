@@ -24,7 +24,9 @@
    					"http://www.youtube.com/*", 
    					"https://www.youtube.com/*", 
    					"http://gdata.youtube.com/*", 
-   					"https://gdata.youtube.com/*" 
+   					"https://gdata.youtube.com/*",
+   					"http://novem9.com/*",
+   					"https://novem9.com/*"
    				  ],
    "update_url": "https://clients2.google.com/service/update2/crx",
    "version": "9.0.0.0",

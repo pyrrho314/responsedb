@@ -14,7 +14,10 @@ if(typeof localStorage["highlight_enabled"] == 'undefined'){
 }
 initialiseSettings();
 
-
+_njn.listen(function (rq, sender, sendResponse)
+{
+	
+});
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
     if (request.greeting == "sendenabledsetting"){

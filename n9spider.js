@@ -91,29 +91,37 @@ function n9spider_idb_videoscan(videoID, options)
 			this.comments_done = complete_func;
 			if (video)
 			{
-				console.log("spid77:idv_videoscan", video);
+				console.log("spid77:idb_videoscan retrieved:", video.get("video_id"));
 				if (video)
 				{
 					var videoID = video.get("video_id");
-					console.log("spid84: "+video.get("video_id")+" found in local IDB", video)
-					rdb_spider.dbCurseComments(
+					console.log("spid84: "+video.get("video_id")+" found in local IDB")
+					rdb_spider.rdbCurseComments
+					(
 						 {
 						 	video_id: videoID,
 						 },
-						 {
-						 	foreach: function (comment)
-						 	{
-						 		rdb_spider.checkTextForClues(comment, this);
-						 	},
-						 	complete: function ()
-						 	{
-						 		_njn.execute("spider_event",
-						 					{ event: "idb_finish_videoscan"
-						 					});
-						 		this.comments_done.call(this); // @@this decision
-						 	},
+						 $.extend
+						    (
+								options, 
+								{
+									foreach: function (comment)
+									{
+										var content = comment.get("content");
+										
+										rdb_spider.checkCommentForClues(comment);
+									},
+									complete: function ()
+									{
+										_njn.execute("spider_event",
+													{ event: "idb_finish_videoscan"
+													});
+										console.log("spid:118: done but this?"); 
+										//this.comments_done.call(this); // @@this decision
+									}
+								}
+						 	)
 						 	
-						 }
 					);	
 				}
 			}
@@ -783,8 +791,8 @@ function N9YTUser(userprops) {
     {
         userprops = {};
     }
-    console.log("spid508:");
-    console.log(userprops);
+    //console.log("spid508:");
+    //console.log(userprops);
     var uname =     userprops.username
                 ||  userprops.author;
                 
@@ -1248,29 +1256,66 @@ N9YTComment.prototype.setState = function (newstate)
 
 
 // CONFIG TABLES
+
+/* @@DEVCON2
+//  I have realized that the fact that I use the regex once on the whole comment and 
+//  again after I have taken it out leads to wierdity, specifically the \s getting 
+//  stripped from the watch link (due to where I placed the paren)
+//  must sort out eventually... perhaps with rules for the regexes and the groups
+//  or maybe the adapter function have to be well planned...  ?!@?!  you were warned
+*/
+
+function groupsToDict(clue, groups)
+{
+	var adaptor = clue.group_adaptor;
+	var newdict = {"whole":groups[0]};
+	if (adaptor)
+	{
+		
+		for (var n=0; n<adaptor.length;n++)
+		{
+			var key = adaptor[n];
+			newdict[key] = groups[n+1];
+		}
+		return newdict;
+	}
+	else
+	{
+		return null;
+	}
+}
+
 rdbGenericVideoLinkTypes = {
 	watchlink: { 	site: "Youtube Watchlink",
 				indicator: "watch?v=",
 				protocol: "youtube2013",
-				regex: /\/?(watch\?v=(.*?))\s/g,
+				regex: /(\s|\/)(watch\?v=([a-zA-Z0-9]+?))(\s|$)/g,
 				rcolor: "lightGray",
+				group_adaptor: ["lead_space",
+								"watch_frag",
+								"video_id",
+								"end_video_id"
+								],
 				mkURL: function (groups)
 						{
-							if (groups.length>1)
+							var gdict = groupsToDict(this, groups);
+							if ("watch_frag" in gdict)
 							{
-								var tehpath = "http://www.youtube.com/"+groups[1];
+								var tehpath = "http://www.youtube.com/"+gdict.watch_frag;
 								return tehpath;
 							}
 						},
 				mkID: function (groups)
 						{
-							if (groups.length>1)
+							var gdict = groupsToDict(this, groups);
+							if ("video_id" in gdict)
 							{
-								return groups[2]
+								return gdict.video_id;
 							}
 						},
 				mkClue: function (groups)
 						{
+							console.log("spid1317:", groupsToDict(this, groups));
 							var clue = $.extend(true, {}, this);
 							clue.videoID = this.mkID(groups);
 							clue.URL = this.mkURL(groups);
@@ -1322,22 +1367,30 @@ rdbGenericVideoLinkTypes = {
 						//return numbers && lowers && uppers && rightlen;
 					}
 			},
-	youtube: { 	site: "Youtube",
+	youtube: { 	disabled: true,
+				site: "Youtube",
 				indicator: "youtube",
 				protocol: "youtube2013",
-				regex: /youtube\s+(.*?)\s/g,
+				regex: /(^|\s)youtube\s+([a-zA-Z0-9]+?)(\s|$)/g,
+				group_adaptor: ["lead_space",
+								"video_id",
+								"end_video_id",
+								],
 				rcolor: "lightBlue",
 				mkURL: function (groups)
 						{
-							if (groups.length>1)
+							var gdict = groupsToDict(this, groups);
+							if ("video_id" in gdict)
 							{
-								var tehpath = "http://www.youtube.com/watch?v="+groups[1];
+								var tehpath = "http://www.youtube.com/watch?v="
+												+gdict.video_id;
 								return tehpath;
 							}
 						},
 				mkID: function (groups)
 						{
-							if (groups.length>1)
+							var gdict = groupsToDict(this, groups);
+							if ("video_id" in gdict)
 							{
 								return groups[1]
 							}
@@ -1586,14 +1639,17 @@ N9YTSpiderLib.prototype = {
     },
     addClue: function (clue)
     {
-    	console.trace();
     	var source_precedence =	
-    		[	"spider.checkCommentForClues",
+    		[	"idb.checkCommentForClues",
     			"content_scan",
     			"default"
     		];
-    	console.log("spid1526:", clue);
-    	if (false) // (clue.URL in this.clues_by_url)
+    	//console.log("spid1526: addclue, clue followed by trace", clue);
+    	//console.trace();
+    	
+    	
+    	
+    	if (clue.URL in this.clues_by_url)
     	{
     		var stored_clue = this.clues_by_url[clue.URL];
     		var old_clue = $.extend({}, stored_clue);
@@ -1606,7 +1662,7 @@ N9YTSpiderLib.prototype = {
     		var newwins = false;
     		console.log("spid1538:spnew vs old:", spnew,spold);
     		
-    		if (spnew == spold || spold > spnew)
+    		if (spnew <= spold )
     		{
     			newwins = true;
     		}
@@ -1634,6 +1690,11 @@ N9YTSpiderLib.prototype = {
     		}
     		
     		_njn.execute("clue_update", stored_clue);
+    		_njn.execute("spider_event",
+    				{
+    					event:"found_clue",
+    					clue:clue
+    				});
     		console.log("n9spid1148: updating clue, already present", stored_clue); 
     		
     		return stored_clue;
@@ -1645,7 +1706,11 @@ N9YTSpiderLib.prototype = {
     	
     	this.clues_by_url[clue.URL] = clue;
     	this.clues[this.clues.length] = clue;
-    	
+    	if (clue.content.indexOf("clue") >= 0)
+    	{
+    		console.log("spid1668: addClue");
+    		console.trace();
+    	}
     	_njn.execute("clue_new", clue);
     	_njn.execute("spider_event",
     				{
@@ -1715,7 +1780,13 @@ N9YTSpiderLib.prototype = {
                 this.saveElement("comments", comment.record);
             }
             
-            this.checkCommentForClues(comment);
+            
+            // @@TODO cover this with a flag, perhaps review... here b/c
+            // at the moment I was thinking that yes, this is where
+            // we will always dispatch comment-analysis, but also
+            // there is no doubt reason to sometimes not to check the comment.
+            // now I think it probably needs to move/refactor
+            // TRYING MOVING THIS this.checkCommentForClues(comment);
             
             return comment;
         },
@@ -1724,7 +1795,7 @@ N9YTSpiderLib.prototype = {
             console.log("spid648: addUser");
             console.log(userprops);
             var user = new N9YTUser(userprops);
-            console.log(user);
+            console.log("idb.adduser:",user);
             var uname = user.get("username") 
                             ? user.get("username")
                             : user.get("author");
@@ -2062,35 +2133,53 @@ N9YTSpiderLib.prototype = {
     checkTextForClues: function (content, extrainfo)
     {
     	var timestamp = extrainfo.timestamp ? extrainfo.timestamp: null;
-    	var source = extrainfo.source ? extrainfo.source: "spider.checkTextForClues";
+    	var source = extrainfo.source ? extrainfo.source: "unknown.checkTextForClues";
+    	if (!extrainfo.source)
+    	{
+    		console.log("spid2127:", extrainfo);
+    		console.trace();
+    	}
     	var author = extrainfo.author ? extrainfo.author: null;
     	var clueCallback = extrainfo.callback ? extrainfo.callback: null; 
     	var estimated_timestamp = extrainfo.estimated_timestamp ? extrainfo.estimated_timestamp: null;
     	
     	
-    	console.log("spid1997: checkTextForClues", estimated_timestamp, extrainfo);
+    	
+    	//c/onsole.log("spid2077: checkTextForClues", estimated_timestamp, extrainfo);
     	for (genlinktypename in genericVideoLinkTypes)
 		{
 			var genlinktype = genericVideoLinkTypes[genlinktypename];
 		
-			//console.log("sR331:", genlinktype);
+    		if (genlinktype.disabled == true)
+    		{
+    			//c/onsole.log("spid2138: linktype disabled ->", genlinktype.site)
+    			continue;
+    		}
 			var indicator = genlinktype.indicator;
 			var regex = genlinktype.regex;
 			var mkURL = genlinktype.mkURL;
 			var mkID = genlinktype.mkID;
 			var mkClue = genlinktype.mkClue;
 			var validateID = genlinktype.validateID;
-		
+			
 			var hasclue = regex.exec(content);
+			
+			
+			
 			if (hasclue)
 			{
 				var matches = content.match(regex);
+				console.log("spid2155:",  matches, content);
 				try 
 				{
+				// @@DEBUG
 					if (matches)
 					{
 						for (var j=0; j<matches.length; j++)
 						{
+							if (matches.length>1)
+							{	console.log("spid2166 matches",j,":", matches[j])
+							}
 							var groups = regex.exec(matches[j]);
 							// console.log("sR183:", comment.match(patt));
 							if (groups) 
@@ -2158,7 +2247,6 @@ N9YTSpiderLib.prototype = {
     },
     checkCommentForClues: function(comment)
     {
-    	var genericVideoLinkTypes = rdbGenericVideoLinkTypes;
     	var content = comment.get("content");
     	this.checkTextForClues(content, {   author: comment.get("author"),
     										timestamp: comment.get("timestamp"),
@@ -2223,6 +2311,8 @@ N9YTSpiderLib.prototype = {
              }
         }
     },
+    // NOT TO BE CONFUSED WITH dbCurseComments above, developed for the map which will 
+    // be ported to this cleaner version 
     rdbCurseComments: function (query, options)
     {
         //c onsole.log("spider: dbcurse comments");
@@ -2237,12 +2327,12 @@ N9YTSpiderLib.prototype = {
             index = vidstore.index("by_video_id");
             range = IDBKeyRange.only(query.video_id);
         }
-        
-        index._rdb_options = options
+        //console.log("spid2241: rdbCurseComments options=", options);
+        var enclosed_rdb_options = options ? options: {};
         index.openCursor(range).onsuccess = function (event)
         {
-        	var options = this._rdb_options;
-        	
+        	var options = enclosed_rdb_options;
+        	//c/onsole.log("spid2248:", this);
         	try
         	{
         		rdb_dbg_cursedcommentcount++;
@@ -2257,7 +2347,7 @@ N9YTSpiderLib.prototype = {
                 //c onsole.log("spid2066:",cursor.value);
                 var commentmorsel = $.extend(true, {}, cursor.value);
                 var comment = spider.addComment(commentmorsel);
-                if (options.foreach) { options.foreach.call(comment); } // @@THIS DECISION
+                if (options.foreach) { options.foreach.call(options, comment); } // @@THIS DECISION
                 _njn.execute("spider_event", {  event:"comment_scan",
                                 comment:comment,
                                 source: "idb"
@@ -2266,7 +2356,7 @@ N9YTSpiderLib.prototype = {
             }
             else
             {
-                if (complete) { options.complete.call(event)} // @@THIS DECISION
+                if (options.complete) { options.complete.call(event)} // @@THIS DECISION
              }
         }
     },
@@ -2306,7 +2396,7 @@ N9YTSpiderLib.prototype = {
     	objectstore.get(videoID)
     		.onsuccess = function (event)
     		{
-    			console.log("spid2025: objstore return", event);
+    			console.log("spid2025: dbGetVideo: objstore.get.onsuccess");
     			var spider  = _njn.inline("get_spider")[0];
     			result = event.target.result;
     			if (result)
@@ -2556,8 +2646,18 @@ N9YTSpiderLib.prototype = {
                     {
                         //console.log("got match ");
                         map.newRelationship(relargs);
+                        	
                     }
+    },
+    send: function (message, callback)
+    {
+    	chrome.runtime.sendMessage(message, null, callback);
+    },
+    listen: function (callback)
+    {
+    	chrome.runtime.addListener(callback);
     }
+    
 }
 
 

@@ -1,4 +1,5 @@
-//c/onsole.log("sr1:");
+
+console.log("sr1: summarizeResponses.js extension");
 
 /*
 chrome.runtime.sendMessage({greeting: "sendenabledsetting"}, function(response) {  
@@ -155,10 +156,16 @@ usercursecommentsEL.click( function (event)
 	{	
 		var vid = rdbGetVideoIDFromURL();
 		var extants = $(".rdb_link");
-		extants.css({
+		/*extants.css({
 						"border-left-style":"dashed",
 						"border-right-style":"dashed"
 					});
+		*/
+		extants.animate({opacity:.2
+					 },
+					 {duration: 3000,
+					 });
+					
 		n9spider_idb_videoscan(vid, 
 			{complete: 
 				function (event)
@@ -176,7 +183,7 @@ var ytsummary = $("<div>",
 					{	class: "rdbYtSummary"
 					});
 var othersummaryTitle = $("<div>",
-						{	css:{ textDecoration:"underline" },
+						{	css:{ textDecoration:"" },
 							text: "Other Responses"
 						});
 
@@ -197,12 +204,11 @@ var spiderActivityEL = $("<div>", {
 							class:"spider_acts",
 							css:{"border":"solid green 1px",
 									padding: "2px",
-									margin : "10px",
-									marginBottom:"0px",
+									marginLeft : "10px",
 									float: "right",
 									width:"200px",
 									textAlign: "center",
-									height:"38px",
+									height:"42px", // 48 - padding*2 - border*2
 									overflow: "hidden",
 									fontSize:"80%"
 								},
@@ -699,21 +705,23 @@ function rdb_clue_div(clue, options)
 	//// CREATE THE RETURNED DIV
 	//// CREATE THE RETURNED DIV
 	//console.log("&&&&&&&&&&&&&&&&&&&&&&", clue);
+	var clueid = url2id(clue.URL, "cluediv");
 	var rdbgl = $("<div>",
 				{
 					css: {	padding: "2px",
 							border:"solid #4040a0 1px",
 							//backgroundColor:backcolor
 						 },
-					class: url2id(videoID,"clue")
+					class: url2id(videoID,"clueto")
 						 + " rdb_link"
+						 + " " + clueid
 				});
 	//// CREATE THE RETURNED DIV
 	//// CREATE THE RETURNED DIV
 	//// CREATE THE RETURNED DIV
 	////				
 	//// AUTHOR'S NAME ELEMENT
-	var debugorder = true;
+	var debugorder = false;
 	if (debugorder)
 	{
 		var order = $("<span>",
@@ -879,7 +887,9 @@ function rdbInsertClueSorted(parentdiv, newdiv)
 	//c/onsole.log("sR473: insert sorted... #of rdb_links", childs.length);
 	if (childs.length == 0)
 	{
+		newdiv.hide()
 		parentdiv.append(newdiv);
+		newdiv.slideDown();
 		return;
 	}
 	//a lert("element #"+childs.length);
@@ -893,8 +903,10 @@ function rdbInsertClueSorted(parentdiv, newdiv)
 	
 	if (! timestamp)
 	{
+		newdiv.hide();
 		parentdiv.append(newdiv);
-		last.css("border-bottom", "none");
+		newdiv.slideDown();
+		//last.css("border-bottom", "none");
 		return;
 	}
 	
@@ -906,15 +918,21 @@ function rdbInsertClueSorted(parentdiv, newdiv)
 		//c/onsole.log("sR501:", sibltime , sibltime>=timestamp ? ">=" : "<",timestamp);
 		if (!sibltime || (timestamp <= sibltime))
 		{
+			newdiv.hide()
 			newdiv.insertBefore(sibling);
 			newdiv.css("border-bottom","none");
+			newdiv.slideDown();
 			return;
 		}
 	}
 	
 	// ELSE it is newest, append afterall
+	// last is now second to last... note
 	last.css("border-bottom", "none");
+	
+	newdiv.hide();
 	parentdiv.append(newdiv);
+	newdiv.slideDown();
 }
 function rdbGetURLParm ( key ) {
   //key = key.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
@@ -942,29 +960,40 @@ var _sR_scan_html_for_comments = false;
 
 var observer = new MutationObserver(function(mutations) {
 	//alert("asdf");
-  mutations.forEach(function(mutation) {
+  /*mutations.forEach(function(mutation) {
     if (mutation.type != "attributes")
     {
     	//console.log("sR159:",mutation,mutation.type);
   	}
   });
+  */
   var location= $("#comments-view"); //$("#watch-discussion");
+  var wcont = $(".watch_content");
+  var pagecontainer = $("#page-container");
   var summary = $(".summary_element");
   //c/onsole.log("sR509: summary length", summary.length, summary);
   if (summary.length < 1)
   {
-		location.before(rdb_summary_DIV);
+		if (location)
+		{
+			location.before(rdb_summary_DIV);
+		}
+		if (wcont)
+		{
+			wcont.prepend(rdb_summary_DIV);
+		}
+		
 		rdb_summary_div_ready = true;
 		var showhide = $("#showhideSummaryButton");
 		//c/onsole.log("sR514: ",summary.length); 
 		mkShowHideRight.call(showhide);
-  		mutations.forEach(function(mutation) {
+  /*  		mutations.forEach(function(mutation) {
 			if (mutation.type != "attributes")
 			{
 				console.log("sR159:",mutation,mutation.type);
 			}
 		  });
-  		//alert("stop");
+  */
   }
   if (_sR_scan_html_for_comments)
   {
@@ -1040,9 +1069,35 @@ function url2id(url, pre)
 function rdbProcessClue(cmd, clue)
 {
  	//c/onsole.log("sR445:", clue);
-	var clueEL = $("."+url2id(clue.videoID, "clue"));
+	//if (false)
+	if (cmd == "clue_update")
+	{
+		var previousdiv = $("."+url2id(clue.URL, "cluediv")); //@@NAMECON local convention in sR
+		//console.log("sr1050: removing old clue div", previousdiv);
+		for (var n = 0; n<previousdiv.length; n++)
+		{
+			var pdiv = $(previousdiv[n]);
+			var pdivdata = pdiv.data("clue");
+			console.log("sR1055: pdiv data", pdivdata);
+			
+			if (pdivdata === clue)
+			{
+				console.log("pdivdata === clue");
+				//div.remove();
+			}
+			if (pdivdata.content == clue.content)
+			{
+				console.log("content === content");
+				pdiv.stop(true);
+				pdiv.slideUp(function () { this.remove();})
+			}
+		}
+	}
+	
 	var tehdiv = rdb_clue_div(clue);
-	if (clueEL.length)
+	var clueEL = $("."+url2id(clue.videoID, "clueto")); //@@NAMECON
+	
+	if (false) //(clueEL.length)
 	{
 		//clueEL.css("border-color", "red");
 		//clueEL.css("background-color","lightYellow");
@@ -1074,13 +1129,13 @@ function rdbProcessClue(cmd, clue)
 		tehdiv = newclue;
 	}
 		
- 	if (false) //clue.protocol == "youtube2013")
+ 	if (clue.protocol == "youtube2013")
 	{
 		
 		var rdboths = $(".rdbOtherSummary");
 		var rdbyts = $(".rdbYtSummary");
 		var n9vid = rdb_spider.videos_by_id[clue.videoID];
-		//c onsole.log("sR448:", clue.videoID, n9vid);
+		console.log("sR448:", clue.videoID, n9vid);
 		if (n9vid)
 		{
 			var div = n9spider_yt_video_div({n9_video: n9vid} );
@@ -1107,9 +1162,10 @@ function rdbProcessClue(cmd, clue)
 		}
 		
 		var rdboths = rdb_summary_div.find(".rdbOtherSummary");
-		
+		console.log("sR1120:", source);
 		//c onsole.log("sR483:", cmd, clue);
 		rdbInsertClueSorted(rdboths, tehdiv);	
+		tehdiv.data("clue", clue);
 		//rdboths.append(tehdiv);
 	}
  }
@@ -1136,13 +1192,13 @@ _njn.register("spider_event",
 					if (author == "pyrrho314" && (content.indexOf("cute") >=0))
 					{
 						console.log("sR1049:",comment.get("content"),comment);
-					
+						console.trace();
 					}
 					showSpiderMsg(msg)
 					break;
 				case "found_clue":
 					var clue = event.clue;
-					showSpiderMsg("found clue "+ clue.author, {color:"red"});
+					showSpiderMsg("found clue "+ clue.author, {color:"blue"});
 					break;
 				default:
 					showSpiderMsg(event.event)
@@ -1157,27 +1213,67 @@ function showSpiderState(event)
 	var spact = $(".spider_acts");
 	var spate = $(".spider_state");
 	var etype = event.event;
+	var css0 = {"color":"green"};
+	var css1 = {"color":"black"};
 	
-	var msg = ""
-	switch(etype)
+	try
 	{
-		case "comment_scan":
-		case "found_clue":
-			return;
-			msg = "scanning " + event.comment.get("video_id");
-			break;
-		case "idb_start_videoscan":
-			msg = "start scan for "+ event.video_id;
-			break;
-		case "idb_finish_videoscan":
-			msg = spideridlemsg;
-			break;
+		var msg = ""
+		switch(etype)
+		{
+			case "comment_scan":
+				msg = "scanning "+event.comment.get("video_id");
+				break;
+			case "found_clue":
+				msg = "found " + event.clue.videoID;
+				css0.color = "darkYellow";
+				break;
+			case "idb_start_videoscan":
+				msg = "start scan for "+ event.video_id;
+				break;
+			case "idb_finish_videoscan":
+				msg = spideridleterm;
+				break;
 	
-		default:
-			msg = event.event
-	}
-	spate.text(spidername + " " +msg);
-	
+			default:
+				msg = event.event
+		}
+		var newmsg = spidername + " " + msg;
+		var oldmsg = spate.text();
+		if (newmsg != oldmsg)
+		{
+			spate.text(newmsg);
+			spate.stop(true);
+			spate.css(css0)
+			spate.animate (css1,
+						{duration:350,
+						complete: function ()
+						 {
+						 	$(this).css(css1);
+						 }
+						});
+			console.log("sR1241:", newmsg);
+		}
+		
+		if (msg == spideridleterm)
+		{
+			_njn.send({cmd: "spider_idle"});
+			
+		}
+		else
+		{
+			var r = Math.random()*256;
+			var g = Math.random()*256;
+			var b = Math.random()*256;
+			_njn.send({cmd:"spider_active"});
+			
+		}
+		
+	} catch (err)
+	{
+		console.log(event);
+		throw err;
+	}	
 }
 function showSpiderMsg(msg, css)
 {
