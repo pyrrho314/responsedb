@@ -1963,7 +1963,25 @@ function Novem() {
         //c onsole.log("nj1190:"+_njn.userName());
     });
     */
-    
+    ////////
+    // COMMUNICATIONS BETWEEN CONTENT/EXTENSION
+    this.send =  function (message, options)
+    {
+    	return;
+    	var callback = options.callback;
+    	
+    	chrome.runtime.sendMessage( message, callback);
+    },
+    this.listen = function (options)
+    {
+    	return;
+    	var callback = options.callback;
+    	if (callback)
+    	{
+    		console.log("n1979: _njn.listen ", options);
+    		chrome.runtime.onMessage.addListener(callback);
+    	}
+    }
 }
 
 function Target(target) {

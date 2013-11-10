@@ -1,15 +1,15 @@
 {
    "background": {
-      "scripts": [ "background.js" ]
+      "scripts": [ "jquery.js", "novem.js", "background.js" ]
    },
    "browser_action": {
       "default_icon": "icon.png",
       "default_popup": "popup.html",
-      "default_title":  "Indexes response links from the description and comments. Also adds some information to youtube pages, which can be configured to the user's preference."
+      "default_title":  "Keeps track of responses to videos."
    },
    "content_scripts": [ {
       "css": ["summarizeResponses.css"], 
-      "js": [ "jquery.js", "novem.js", "morsels.js", "n9spider.js", "summarizeResponses.js"],
+      "js": [ "jquery.js", "jquery-ui.js",  "novem.js", "morsels.js", "n9spider.js", "summarizeResponses.js"],
       "matches": [ "*://www.youtube.com/watch*", "*://www.youtube.com/all_comments*" ]
    } ],
    "description": "This extension keeps track of the responses to the videos you have watched, recognized by links in comments. There is also a short set of commands that can precede the link to characterize the nature of the response.",

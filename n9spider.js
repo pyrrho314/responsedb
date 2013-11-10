@@ -117,7 +117,7 @@ function n9spider_idb_videoscan(videoID, options)
 													{ event: "idb_finish_videoscan"
 													});
 										console.log("spid:118: done but this?"); 
-										//this.comments_done.call(this); // @@this decision
+										this.comments_done.call(this); // @@this decision
 									}
 								}
 						 	)
@@ -2134,12 +2134,13 @@ N9YTSpiderLib.prototype = {
     {
     	var timestamp = extrainfo.timestamp ? extrainfo.timestamp: null;
     	var source = extrainfo.source ? extrainfo.source: "unknown.checkTextForClues";
-    	if (!extrainfo.source)
+    	if (true) // (!extrainfo.source)
     	{
     		console.log("spid2127:", extrainfo);
     		console.trace();
     	}
     	var author = extrainfo.author ? extrainfo.author: null;
+    	var author_pretty = extrainfo.author_pretty ? extrainfo.author_pretty: null;
     	var clueCallback = extrainfo.callback ? extrainfo.callback: null; 
     	var estimated_timestamp = extrainfo.estimated_timestamp ? extrainfo.estimated_timestamp: null;
     	
@@ -2222,6 +2223,10 @@ N9YTSpiderLib.prototype = {
 									{
 										clue.author = author;
 									}
+									if (author_pretty)
+									{
+										clue.author_pretty = author_pretty;
+									}
 									rdb_spider.addClue(clue);
 									if (extrainfo && ("callback" in extrainfo))
 									{
@@ -2249,6 +2254,7 @@ N9YTSpiderLib.prototype = {
     {
     	var content = comment.get("content");
     	this.checkTextForClues(content, {   author: comment.get("author"),
+    										author_pretty: comment.get("author_pretty"),
     										timestamp: comment.get("timestamp"),
     										source: "idb.checkCommentForClues"
     									}
@@ -2356,7 +2362,7 @@ N9YTSpiderLib.prototype = {
             }
             else
             {
-                if (options.complete) { options.complete.call(event)} // @@THIS DECISION
+                if (options.complete) { options.complete.call(options)} // @@THIS DECISION
              }
         }
     },
@@ -2648,15 +2654,8 @@ N9YTSpiderLib.prototype = {
                         map.newRelationship(relargs);
                         	
                     }
-    },
-    send: function (message, callback)
-    {
-    	chrome.runtime.sendMessage(message, null, callback);
-    },
-    listen: function (callback)
-    {
-    	chrome.runtime.addListener(callback);
     }
+    
     
 }
 

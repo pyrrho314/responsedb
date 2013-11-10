@@ -14,23 +14,41 @@ if(typeof localStorage["highlight_enabled"] == 'undefined'){
 }
 initialiseSettings();
 
-_njn.listen(function (rq, sender, sendResponse)
-{
-	
-});
-chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
-    if (request.greeting == "sendenabledsetting"){
-      sendResponse({farewell: localStorage["extension_enabled"]});
-	  }
-	 else if(request.greeting == "sendhighlightsetting"){
-	 sendResponse({farewell: localStorage["highlight_enabled"]});
-	 }
-	 else{
-	 
-	 }
-  });
+console.log("Response DB: background element: attaching");
 
+var listen_count = 0;
+var last_state = null;
+_njn.listen(
+	{ callback: 
+			function (rq, sender, sendResponse)
+			{
+				listen_count++;
+				
+				var cmd = rq.cmd;
+				if (last_state != rq.cmd)
+				{
+					switch(cmd)
+					{	
+						case "spider_active":
+							chrome.browserAction.setBadgeText({text: "busy"})
+							break;
+						case "spider_idle":
+							chrome.browserAction.setBadgeText({text:""});
+							break;
+					}
+					sendResponse({ack: true,
+									changed: true
+								 });
+				}				
+				else
+				{
+					sendResponse({  ack: true,
+								changed: false
+								 });
+				}
+			}
+	});
+	
 
 
 

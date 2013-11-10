@@ -1,5 +1,6 @@
-
 console.log("sr1: summarizeResponses.js extension");
+
+var MASSIVE_DEBUG = false;
 
 /*
 chrome.runtime.sendMessage({greeting: "sendenabledsetting"}, function(response) {  
@@ -103,17 +104,20 @@ var summary = $("<div>",
 				
 
 /// FLOATING RIGHT: scan controls
+/// FLOATING RIGHT: scan controls
+/// FLOATING RIGHT: scan controls
+
 var userscanyoutubeEL = $ ("<input>",
 				 	{	type:	"submit",
 				 		class:  "USERscanYTVideo",
 				 		id: 	"rdb_UdbScanYTVideo",
-				 		value: 	"scan youtube video",
+				 		value: 	"Load from YouTube",
 				 		
 				 		css: {	"margin-right":"10px",
 				 				"margin-top":"14px",
 				 				border:"solid gray 1px",
 				 				float:"right",
-				 				fontSize: "70%",
+				 				fontSize: "75%",
 				 				width:"12em"
 				 			 }
 				 	}
@@ -124,13 +128,14 @@ var usercursecommentsEL = $ ("<input>",
 				 	{	type:	"submit",
 				 		class:  "USERdbCurseVideo",
 				 		id: 	"rdb_UdbCCButton",
-				 		value: 	"retrieve previous scan",
+				 		value: 	"Load From local iDB",
+				 		
 				 		
 				 		css: {	"margin-right":"10px",
 				 				"margin-top":"14px",
 				 				border:"solid gray 1px",
 				 				float:"right",
-				 				fontSize: "70%",
+				 				fontSize: "75%",
 				 				width:"12em"
 				 			 }
 				 	}
@@ -138,9 +143,6 @@ var usercursecommentsEL = $ ("<input>",
 summary.append(usercursecommentsEL);
 
 
-
-
-/// eof FLOATING RIGHT SCANNER CONTROLS
 userscanyoutubeEL.click( function (event)
 	{
 		var vid = rdbGetVideoIDFromURL();
@@ -152,6 +154,7 @@ userscanyoutubeEL.click( function (event)
 		);
 	}
 );
+
 usercursecommentsEL.click( function (event)
 	{	
 		var vid = rdbGetVideoIDFromURL();
@@ -165,16 +168,24 @@ usercursecommentsEL.click( function (event)
 					 },
 					 {duration: 3000,
 					 });
-					
+		
+		$(this).prop("disabled", true);			
 		n9spider_idb_videoscan(vid, 
 			{complete: 
 				function (event)
 					{
+						usercursecommentsEL.prop("disabled", false);
 						console.log("sR158: completed idb video retrieval");
 					}
 			}
 		);
 	});
+
+/// eof FLOATING RIGHT SCANNER CONTROLS
+/// eof FLOATING RIGHT SCANNER CONTROLS
+/// eof FLOATING RIGHT SCANNER CONTROLS
+
+
 var ytsummaryTitle = $("<div>",
 						{	css:  { textDecoration:"underline" },
 							text: "Youtube Responses"
@@ -336,7 +347,7 @@ var _sR_checkOpts = {
 		}
 		console.log("sR262: clue callbacks from check comments %%%%%%%%%%%%%%", this.count);
 		return; 
-		var elID = url2id(clue.URL, "rdb_clue_link");
+		var elID = url2id(clue.URL+clue.author, "rdb_clue_link");
 		var url = clue.URL;
 		var videoID = clue.videoID;
 		var comment = this.commentEL;
@@ -705,7 +716,7 @@ function rdb_clue_div(clue, options)
 	//// CREATE THE RETURNED DIV
 	//// CREATE THE RETURNED DIV
 	//console.log("&&&&&&&&&&&&&&&&&&&&&&", clue);
-	var clueid = url2id(clue.URL, "cluediv");
+	var clueid = clue2id(clue);
 	var rdbgl = $("<div>",
 				{
 					css: {	padding: "2px",
@@ -713,8 +724,8 @@ function rdb_clue_div(clue, options)
 							//backgroundColor:backcolor
 						 },
 					class: url2id(videoID,"clueto")
-						 + " rdb_link"
-						 + " " + clueid
+						 + " rdb_link",
+					id: clueid
 				});
 	//// CREATE THE RETURNED DIV
 	//// CREATE THE RETURNED DIV
@@ -735,8 +746,10 @@ function rdb_clue_div(clue, options)
 		rdbgl.prepend(order);
 	}
 	if (clue.author)
-	{	var author = $("<div>",
-					{	text:clue.author ,
+	{	
+		var author_pretty  = clue.author_pretty? clue.author_pretty: clue.author;
+		var author = $("<div>",
+					{	text:author_pretty ,
 						css: {	fontSize:"115%",
 								display:"inline-block",
 								backgroundColor:"white",
@@ -747,6 +760,7 @@ function rdb_clue_div(clue, options)
 					});
 		//rdbgl.prepend("<br clear='all'/>");
 		rdbgl.prepend(author);
+		console.log("sR752:", clue);
 	}
 	
 	
@@ -960,13 +974,15 @@ var _sR_scan_html_for_comments = false;
 
 var observer = new MutationObserver(function(mutations) {
 	//alert("asdf");
-  /*mutations.forEach(function(mutation) {
-    if (mutation.type != "attributes")
+  // THIS IS NO LONGER BEING CALLED ON YOUTUBE PAGES
+  // AS OF 2013/11/7 (that is the page doesn't mutate)
+  mutations.forEach(function(mutation) {
+    if (true) //(mutation.type != "attributes")
     {
     	//console.log("sR159:",mutation,mutation.type);
   	}
   });
-  */
+  
   var location= $("#comments-view"); //$("#watch-discussion");
   var wcont = $(".watch_content");
   var pagecontainer = $("#page-container");
@@ -985,7 +1001,7 @@ var observer = new MutationObserver(function(mutations) {
 		
 		rdb_summary_div_ready = true;
 		var showhide = $("#showhideSummaryButton");
-		//c/onsole.log("sR514: ",summary.length); 
+		console.log("sR514: ",summary.length); 
 		mkShowHideRight.call(showhide);
   /*  		mutations.forEach(function(mutation) {
 			if (mutation.type != "attributes")
@@ -1065,39 +1081,40 @@ function url2id(url, pre)
 	var id = url.replace(/\.|\/|\?|=|:/g, "_");
 	return pre+"__"+id;
 }
+
+function clue2id(clue, type)
+{
+	if (!type)
+	{
+		type = "unique";
+	}
+	
+	switch(type)
+	{
+		case "unique":
+			return url2id(clue.URL + clue.author, "unique");
+	}
+	return null;
+	
+}
 	
 function rdbProcessClue(cmd, clue)
 {
- 	//c/onsole.log("sR445:", clue);
-	//if (false)
-	if (cmd == "clue_update")
+ 	console.log("sR445:rdbProcessClue", cmd, clue);
+	var tehdiv = rdb_clue_div(clue);
+	var pclueEL = $("#"+clue2id(clue)); //@@NAMECON
+	
+	if (pclueEL.length > 0) // if (cmd == "clue_update")
 	{
-		var previousdiv = $("."+url2id(clue.URL, "cluediv")); //@@NAMECON local convention in sR
-		//console.log("sr1050: removing old clue div", previousdiv);
-		for (var n = 0; n<previousdiv.length; n++)
-		{
-			var pdiv = $(previousdiv[n]);
-			var pdivdata = pdiv.data("clue");
-			console.log("sR1055: pdiv data", pdivdata);
-			
-			if (pdivdata === clue)
-			{
-				console.log("pdivdata === clue");
-				//div.remove();
-			}
-			if (pdivdata.content == clue.content)
-			{
-				console.log("content === content");
-				pdiv.stop(true);
-				pdiv.slideUp(function () { this.remove();})
-			}
-		}
+		pclueEL.stop(true);
+		pclueEL.slideUp(function () { this.remove();})
+	
 	}
 	
-	var tehdiv = rdb_clue_div(clue);
-	var clueEL = $("."+url2id(clue.videoID, "clueto")); //@@NAMECON
 	
-	if (false) //(clueEL.length)
+	
+		
+	if (false) // @@DEBUG: COMOUT: (clueEL.length)
 	{
 		//clueEL.css("border-color", "red");
 		//clueEL.css("background-color","lightYellow");
@@ -1129,7 +1146,7 @@ function rdbProcessClue(cmd, clue)
 		tehdiv = newclue;
 	}
 		
- 	if (clue.protocol == "youtube2013")
+ 	if (false) //@@DEBUG @@COMMOUT:(clue.protocol == "youtube2013")
 	{
 		
 		var rdboths = $(".rdbOtherSummary");
@@ -1165,7 +1182,109 @@ function rdbProcessClue(cmd, clue)
 		console.log("sR1120:", source);
 		//c onsole.log("sR483:", cmd, clue);
 		rdbInsertClueSorted(rdboths, tehdiv);	
-		tehdiv.data("clue", clue);
+		//rdboths.append(tehdiv);
+	}
+ }
+	
+function rdbProcessClueOLD(cmd, clue)
+{
+ 	console.log("sR445:rdbProcessClue", cmd, clue);
+	//if (false)
+	if (false) // if (cmd == "clue_update")
+	{
+		var previousdiv = $("."+url2id(clue.URL, "cluediv")); //@@NAMECON local convention in sR
+		//console.log("sr1050: removing old clue div", previousdiv);
+		for (var n = 0; n<previousdiv.length; n++)
+		{
+			var pdiv = $(previousdiv[n]);
+			var pdivdata = pdiv.data("clue");
+			console.log("sR1055: pdiv data", pdivdata);
+			
+			if (pdivdata === clue)
+			{
+				console.log("pdivdata === clue");
+				//div.remove();
+			}
+			if (pdivdata.content == clue.content)
+			{
+				console.log("content === content");
+				pdiv.stop(true);
+				pdiv.slideUp(function () { this.remove();})
+			}
+		}
+	}
+	
+	var tehdiv = rdb_clue_div(clue);
+	var clueEL = $("#"+clue2id(clue)); //@@NAMECON
+		
+	if (false) // @@DEBUG: COMOUT: (clueEL.length)
+	{
+		//clueEL.css("border-color", "red");
+		//clueEL.css("background-color","lightYellow");
+		//clueEL.hide();
+		//c/onsole.log("sR695:", clue);
+		//return;
+		var rdboths = rdb_summary_div.find(".rdbOtherSummary");
+		
+		var tehdiv = rdb_clue_div(clue);
+		//c onsole.log("sR483:", cmd, clue);
+		rdbInsertClueSorted(rdboths, tehdiv);	
+		var clueset = $("."+url2id(clue.videoID, "clue"));
+		clueset.detach();
+		var newclue = $(clueset[0]);
+		var duplclue = $("<div>",
+						{	css:{
+									margin:"5px",
+									marginLeft:"30px"
+								}
+						});
+		var subset = clueset.slice(1);
+		subset.css({"border": "none",
+					"border-left":"solid black 1px"
+					});
+		subset.find(".clue_link, .clue_link_label").remove();
+		duplclue.append(subset);
+		newclue.append(duplclue);
+		
+		tehdiv = newclue;
+	}
+		
+ 	if (false) //@@DEBUG @@COMMOUT:(clue.protocol == "youtube2013")
+	{
+		
+		var rdboths = $(".rdbOtherSummary");
+		var rdbyts = $(".rdbYtSummary");
+		var n9vid = rdb_spider.videos_by_id[clue.videoID];
+		console.log("sR448:", clue.videoID, n9vid);
+		if (n9vid)
+		{
+			var div = n9spider_yt_video_div({n9_video: n9vid} );
+			div.css("width","150px");
+			div.css("height", "200px");
+			div.css("float","left");
+			rdbyts.append(div);
+		}
+	}
+	else
+	{
+		var source = clue.source ? clue.source : "default";
+		if (source == "default")
+		{
+			
+		}
+		else if (source == "content_scan")
+		{
+			tehdiv.css("background-color","#e0f0e0");
+		}
+		else if (source.indexOf("idb.") >= 0)
+		{
+			tehdiv.css("background-color","#e0e0ff");
+		}
+		
+		var rdboths = rdb_summary_div.find(".rdbOtherSummary");
+		console.log("sR1120:", source);
+		//c onsole.log("sR483:", cmd, clue);
+		rdbInsertClueSorted(rdboths, tehdiv);	
 		//rdboths.append(tehdiv);
 	}
  }
@@ -1189,11 +1308,14 @@ _njn.register("spider_event",
 					var comment = event.comment;
 					var content = comment.get("content");
 					var msg = "comment by "+event.comment.get("author");
+					
+					//DEBUG STATEMENT
 					if (author == "pyrrho314" && (content.indexOf("cute") >=0))
 					{
 						console.log("sR1049:",comment.get("content"),comment);
 						console.trace();
 					}
+					
 					showSpiderMsg(msg)
 					break;
 				case "found_clue":
@@ -1213,8 +1335,10 @@ function showSpiderState(event)
 	var spact = $(".spider_acts");
 	var spate = $(".spider_state");
 	var etype = event.event;
-	var css0 = {"color":"green"};
-	var css1 = {"color":"black"};
+	var css0 = {"color":"green",
+				"background-color":"#e0ffe0"};
+	var css1 = {"color":"black",
+				"background-color":"white"};
 	
 	try
 	{
@@ -1223,13 +1347,16 @@ function showSpiderState(event)
 		{
 			case "comment_scan":
 				msg = "scanning "+event.comment.get("video_id");
+				return;
 				break;
 			case "found_clue":
-				msg = "found " + event.clue.videoID;
-				css0.color = "darkYellow";
+				//msg = "found " + event.clue.videoID;
+				//css0.color = "darkYellow";
+				// not a status
+				return;
 				break;
 			case "idb_start_videoscan":
-				msg = "start scan for "+ event.video_id;
+				msg = "loading IDB for "+ event.video_id;
 				break;
 			case "idb_finish_videoscan":
 				msg = spideridleterm;
@@ -1244,12 +1371,12 @@ function showSpiderState(event)
 		{
 			spate.text(newmsg);
 			spate.stop(true);
-			spate.css(css0)
+			spate.css(css0);
 			spate.animate (css1,
-						{duration:350,
+						{duration:1550,
 						complete: function ()
 						 {
-						 	$(this).css(css1);
+						 	//$(this).css(css1);
 						 }
 						});
 			console.log("sR1241:", newmsg);
@@ -1257,7 +1384,13 @@ function showSpiderState(event)
 		
 		if (msg == spideridleterm)
 		{
-			_njn.send({cmd: "spider_idle"});
+			_njn.send({cmd: "spider_idle"}, 
+				{
+					callback: function (msg)
+					{
+						console.log("sR1264:", msg);
+					}
+				});
 			
 		}
 		else
@@ -1265,7 +1398,14 @@ function showSpiderState(event)
 			var r = Math.random()*256;
 			var g = Math.random()*256;
 			var b = Math.random()*256;
-			_njn.send({cmd:"spider_active"});
+			_njn.send({cmd:"spider_active"},
+				{	callback: function (msg)
+					{	if (MASSIVE_DEBUG)
+							{
+								console.log("sR1278: send acked", msg)
+							}
+					}
+				});
 			
 		}
 		
@@ -1298,3 +1438,49 @@ function showSpiderMsg(msg, css)
 							});
 						});
 }
+
+
+// THIS FUNCTION IS AT BOTTOM SO IT CAN DEPEND ON ANY OF THE ABOVE
+function InsertSummaryIntoDocument()
+{	// note the summary div is initialized and dynamically modified...
+	// so the job here is to find a place to put it and put it once.
+  var it_IDcommentsview = $("#comments-view"); //$("#watch-discussion");
+  var it_IDpage 		= $("#page"); 
+  var it_IDwatchcontent = $("#watch7_content");
+  var it_IDpagecontainer = $("#page-container");
+  
+  var it_prio = [
+  					it_IDpage,
+  					it_IDcommentsview,
+  					it_IDwatchcontent,
+  					it_IDpagecontainer
+  				];
+  var summary = $(".summary_element");
+  var insert_target = null;
+  
+  for (var n=0; n<it_prio.length; n++)
+  {
+  	if (it_prio[n].length)
+  	{
+  		console.log("first able target, #"+n);
+  		insert_target = it_prio[n];
+  		break;
+  	}
+  }
+  
+  if (summary.length < 1 && insert_target)
+  	{
+		console.log("sR1332:", rdb_summary_DIV);
+		insert_target.prepend(rdb_summary_DIV);
+		rdb_summary_div_ready = true;
+		var showhide = $("#showhideSummaryButton");
+		console.log("sR514: ",summary.length); 
+		mkShowHideRight.call(showhide);
+	}
+}
+
+// on body ready: insert the summary div soemwhere
+$("body").ready( function ()
+{
+	InsertSummaryIntoDocument();
+}	);
