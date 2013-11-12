@@ -1,5 +1,5 @@
 {
-   "background": {
+	 "background": {
       "scripts": [ "jquery.js", "novem.js", "background.js" ]
    },
    "browser_action": {
@@ -10,7 +10,8 @@
    "content_scripts": [ {
       "css": ["summarizeResponses.css"], 
       "js": [ "jquery.js", "jquery-ui.js",  "novem.js", "morsels.js", "n9spider.js", "summarizeResponses.js"],
-      "matches": [ "*://www.youtube.com/watch*", "*://www.youtube.com/all_comments*" ]
+      "matches": [ "*://apis.google.com/*", "*://www.youtube.com/watch*", "*://www.youtube.com/all_comments*" ],
+   	  "all_frames":true
    } ],
    "description": "This extension keeps track of the responses to the videos you have watched, recognized by links in comments. There is also a short set of commands that can precede the link to characterize the nature of the response.",
    "icons": {
@@ -26,7 +27,8 @@
    					"http://gdata.youtube.com/*", 
    					"https://gdata.youtube.com/*",
    					"http://novem9.com/*",
-   					"https://novem9.com/*"
+   					"https://novem9.com/*",
+   					"*://apis.google.com/*"
    				  ],
    "update_url": "https://clients2.google.com/service/update2/crx",
    "version": "9.0.0.0",

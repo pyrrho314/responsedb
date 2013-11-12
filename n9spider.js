@@ -73,71 +73,105 @@ function n9spider_yt_userscan(username, map, create_domicile)
 
 function n9spider_idb_videoscan(videoID, options)
 {
+	// signature above is original one...
+	// but it can be totally options based, mcay?
+	
+	if (typeof(videoID) == "object")
+	{
+		options = videoID;
+		videoID = options.videoID;
+			
+	}
+	else
+	{
+		options.videoID = videoID;
+	}
+	console.log("spid83: options to idb_videoscan",options);
+	
+	//c/onsole.trace();
 	// @@DOCO: NOTE, I use call and apply to turn option into this a lot!!!!! warning
 	// I need a consistent paradigm but in general it's to give callback access to the
 	// options relating to them. And it's fun.  Self modifying code song time!
 	
 	_njn.execute("spider_event", 
 				{	event:"idb_start_videoscan",
-					video_id: videoID
+					video_id: videoID,
+					options: options
 				});
+				
 	rdb_spider.dbGetVideo(
 		videoID, 
 		function ()
-		{
-			var video = this.n9video;
-			var videoID = this.videoID;
-			var complete_func = this.complete;
-			this.comments_done = complete_func;
-			if (video)
-			{
-				console.log("spid77:idb_videoscan retrieved:", video.get("video_id"));
-				if (video)
+			{	//@@DEV @@TODO: I don't like how I used $extend on the options
+				var video = this.n9video;
+				var videoID = this.videoID;
+				var complete_func = this.complete;
+				this.comments_done = complete_func;
+				console.log("spid107:", this);
+				if (video && this.get_comments)
 				{
-					var videoID = video.get("video_id");
-					console.log("spid84: "+video.get("video_id")+" found in local IDB")
-					rdb_spider.rdbCurseComments
-					(
-						 {
-						 	video_id: videoID,
-						 },
-						 $.extend
-						    (
-								options, 
-								{
-									foreach: function (comment)
+					console.log("spid77:idb_videoscan retrieved:", video.get("video_id"));
+					if (video)
+					{
+						var videoID = video.get("video_id");
+						console.log("spid84: "+video.get("video_id")+" found in local IDB")
+						rdb_spider.rdbCurseComments
+						(
+							 {
+								video_id: videoID,
+							 },
+							 $.extend
+								(
+									options, 
 									{
-										var content = comment.get("content");
+										foreach: function (comment)
+										{
+											var content = comment.get("content");
 										
-										rdb_spider.checkCommentForClues(comment);
-									},
-									complete: function ()
-									{
-										_njn.execute("spider_event",
-													{ event: "idb_finish_videoscan"
-													});
-										console.log("spid:118: done but this?"); 
-										this.comments_done.call(this); // @@this decision
+											rdb_spider.checkCommentForClues(comment);
+										},
+										complete: function ()
+										{
+											_njn.execute("spider_event",
+														{ event: "idb_finish_videoscan"
+														});
+											if (this.comments_done)
+											{
+												this.comments_done.call(this); // @@this decision
+											}
+										}
 									}
-								}
-						 	)
-						 	
-					);	
+								)
+							
+						);	
+					}
+					// conditional above should not return without calling complete function
 				}
-			}
-		},
+				this.complete.call(this);
+			},
 		options);
 }
 
+
 function n9spider_yt_videoscan(video_id, complete_func, options)
 {
+	// this function has weird option names ... videoID and n9complete
+
     //var enc_func = complete_func;
-    if (!options) options = {};
-    options.videoID = video_id;
-    options.n9complete = complete_func;
+    if (typeof(video_id) == "object")
+    {
+    	// then options are really first arg
+    	options = video_id;
+    }
+    else
+    {
+    	if (!options) options = {};
+    	options.videoID = video_id;
+    	options.n9complete = complete_func;
+    }
     $.ajax({type: "get",
             dataType: "json",
-            url: "http://gdata.youtube.com/feeds/api/videos/"+video_id+"?alt=json",
+            url: "http://gdata.youtube.com/feeds/api/videos/"+options.videoID+"?alt=json",
             context: options,
             success: function (data)
                 {
@@ -158,7 +192,7 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
                     var feed = {entry:[entry]};
                     
                     var get_comments;
-                    if ("get_comments" in options) 
+                    if ("get_comments" in this) 
                     	{ get_comments = options.get_comments}
                     else 
                     	{get_comments = true; } // this is the @@DEFAULT
@@ -167,7 +201,7 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
                     
                     
                     if (true)
-                    { //@@ WARNING probably bad for map integration as is
+                    { //@@WARNING probably bad for map integration as is
                     	n9spider_yt_videofeed_parse(feed, 
                     						{username:username,
                     						 feed: feed,
@@ -701,7 +735,8 @@ function n9spider_yt_video_div(args)
                                 width:"95%",
                                 backgroundColor: bgcolor
                              },
-                        video_id: video_id
+                        video_id: video_id,
+                        id: "card_"+video_id //@@NAMECON: id for card shaped div
                     }
                     );
     
@@ -2134,7 +2169,7 @@ N9YTSpiderLib.prototype = {
     {
     	var timestamp = extrainfo.timestamp ? extrainfo.timestamp: null;
     	var source = extrainfo.source ? extrainfo.source: "unknown.checkTextForClues";
-    	if (true) // (!extrainfo.source)
+    	if (!extrainfo.source)
     	{
     		console.log("spid2127:", extrainfo);
     		console.trace();
@@ -2260,6 +2295,7 @@ N9YTSpiderLib.prototype = {
     									}
     						   );
 	},
+	// @@DEPRECATED
     dbCurseComments: function (query, callback) // deprecated see rdb version
     {
         var cbtype = typeof(callback);
@@ -2317,6 +2353,7 @@ N9YTSpiderLib.prototype = {
              }
         }
     },
+    
     // NOT TO BE CONFUSED WITH dbCurseComments above, developed for the map which will 
     // be ported to this cleaner version 
     rdbCurseComments: function (query, options)
@@ -2335,36 +2372,49 @@ N9YTSpiderLib.prototype = {
         }
         //console.log("spid2241: rdbCurseComments options=", options);
         var enclosed_rdb_options = options ? options: {};
-        index.openCursor(range).onsuccess = function (event)
-        {
-        	var options = enclosed_rdb_options;
-        	//c/onsole.log("spid2248:", this);
-        	try
+        
+        var cursor = index.openCursor(range);
+        cursor.onerror = 
+        	function (event)
         	{
-        		rdb_dbg_cursedcommentcount++;
-        	} catch(err)
-        	{
-        		rdb_dbg_cursedcommentcount = 1;
+        		var options = enclosed_rdb_options;
+        		console.log("spid2357: openCursor error");
+        		_njn.execute("spider_event", {event:"comment_scan_error"});
+        		if (options.complete)  { options.complete.call(options)} // @@THIS DECISION
         	}
-        	//console.log("spid2065:dbCurseComments", dbg_count);
-            var cursor = event.target.result;
-            if (cursor)
-            {
-                //c onsole.log("spid2066:",cursor.value);
-                var commentmorsel = $.extend(true, {}, cursor.value);
-                var comment = spider.addComment(commentmorsel);
-                if (options.foreach) { options.foreach.call(options, comment); } // @@THIS DECISION
-                _njn.execute("spider_event", {  event:"comment_scan",
-                                comment:comment,
-                                source: "idb"
-                             });
-                cursor.continue();
-            }
-            else
-            {
-                if (options.complete) { options.complete.call(options)} // @@THIS DECISION
-             }
-        }
+        cursor.onsuccess = 
+        	function (event)
+			{
+				var options = enclosed_rdb_options;
+				//c/onsole.log("spid2248:", this);
+				try
+				{
+					rdb_dbg_cursedcommentcount++;
+				} catch(err)
+				{
+					rdb_dbg_cursedcommentcount = 1;
+				}
+				//console.log("spid2065:dbCurseComments", dbg_count);
+				var cursor = event.target.result;
+				if (cursor)
+				{
+					//c onsole.log("spid2066:",cursor.value);
+					var commentmorsel = $.extend(true, {}, cursor.value);
+					var comment = spider.addComment(commentmorsel);
+					if (options.foreach) { options.foreach.call(options, comment); } // @@THIS DECISION
+					_njn.execute("spider_event", {  event:"comment_scan",
+									comment:comment,
+									source: "idb"
+								 });
+					cursor.continue();
+				}
+				else
+				{
+					if (options.complete) { options.complete.call(options)} // @@THIS DECISION
+				}
+			}
+        
+        
     },
     dbCurseUsers: function (mask, calldata, callback)
     {
@@ -2409,10 +2459,12 @@ N9YTSpiderLib.prototype = {
     			{
         			var video = enclosed_spider.addVideo(event.target.result);
         			options.n9video = video;
+        			options.status = "ok";
     				enclosed_callback.call(options);
     			}
     			else
     			{
+    				options.status = "fail";
     				enclosed_callback.call(options);
     			}
     		};
