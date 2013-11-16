@@ -119,41 +119,45 @@ case "comment_bearing":
 	/// FLOATING RIGHT: scan controls
 	/// FLOATING RIGHT: scan controls
 
+	var powerbutts = $("<div>",
+						{	css: {	float:"right",
+									paddingTop:"12px",
+									paddingLeft:"10px"
+								 },
+								
+						}
+					   );
 	var userscanyoutubeEL = $ ("<input>",
 						{	type:	"submit",
 							class:  "USERscanYTVideo",
 							id: 	"rdb_UdbScanYTVideo",
 							value: 	"Load from YouTube",
 						
-							css: {	"margin-right":"10px",
-									"margin-top":"14px",
+							css: {	display:"block",
+									"margin-top":"1px",
 									border:"solid gray 1px",
-									float:"right",
 									fontSize: "75%",
 									width:"12em"
 								 }
 						}
 					 );
-	summary.append(userscanyoutubeEL);
-
+	
 	var usercursecommentsEL = $ ("<input>",
 						{	type:	"submit",
 							class:  "USERdbCurseVideo",
 							id: 	"rdb_UdbCCButton",
 							value: 	"Load From local iDB",
-						
-						
-							css: {	"margin-right":"10px",
-									"margin-top":"14px",
+							css: {	display:"block",
+									"margin-top":"1px",
 									border:"solid gray 1px",
-									float:"right",
 									fontSize: "75%",
 									width:"12em"
 								 }
 						}
 					 );
-	summary.append(usercursecommentsEL);
-
+	powerbutts.append(usercursecommentsEL);
+	powerbutts.append(userscanyoutubeEL);
+	summary.append(powerbutts);
 	 ///////////////////////////////////////////////
 	// @@KEYFUNC
 	// USER CLICK FUNCTION: user wants to load from youtube
@@ -178,16 +182,20 @@ case "comment_bearing":
 		{	
 			var vid = rdbGetVideoIDFromURL();
 			var extants = $(".rdb_link");
-			/*extants.css({
-							"border-left-style":"dashed",
-							"border-right-style":"dashed"
-						});
-			*/
+			//extants.add(".video_card");
 			extants.animate({opacity:.2
 						 },
-						 {duration: 3000,
+						 {duration: 500,
 						 });
-		
+			
+			var extantvcs = $(".video_card");
+			extantvcs.css({opacity:.2
+						 },
+						 {duration: 1000,
+						 });
+			
+			
+			
 			$(this).prop("disabled", true);			
 			n9spider_idb_videoscan(vid, 
 				{complete: 
@@ -918,11 +926,15 @@ case "comment_bearing":
 	{
 		// should be unique.
 		var id = newdiv.attr("id");
+		
 		var extant = $("#"+id);
-	
+		console.log ("sR921 rdbInsertVideoCard id =", id, extant.length, extant)
+		
 		if (extant.length >0)
 		{
-			extant.fadeOut();
+			extant.attr("id", null);
+			extant.replaceWith(newdiv);
+			return;
 		}
 		newdiv.hide();
 		parent.prepend(newdiv);
@@ -1205,6 +1217,29 @@ case "comment_bearing":
 			div.css("float","left");
 			return div;
 		}
+		function getPlaceholderCard(clue)
+		{
+			var video_id = clue.videoID;
+			console.log("sR1223: clue =", clue);
+			  var newel = $("<div>",
+                    {   css: {  
+                                border:"solid black 1px",
+                                margin:"2px",
+                                padding:"1px",
+                                width:"95%",
+                                backgroundColor: "lightYellow"
+                             },
+                        video_id: video_id,
+                        text: "Video Not Available, Load from Youtube for Info",
+                        id: "card_"+video_id, //@@NAMECON: id for card shaped div
+                        class: "video_card"
+                    }
+                    );
+            newel.css("width","150px");
+			newel.css("height", "200px");
+			newel.css("float","left");
+			return newel
+		}
 		
 		if (clue.protocol == "youtube2013")
 		{
@@ -1215,8 +1250,8 @@ case "comment_bearing":
 			console.log("sR448:", clue.videoID, n9vid);
 			if (n9vid)
 			{
-				var div = getVideoCard(n9vid)
-				rdbyts.append(div);
+				var div = getVideoCard(n9vid);
+				rdbInsertVideoCard(rdbyts,div);
 			}
 			else
 			{
@@ -1224,17 +1259,25 @@ case "comment_bearing":
 				n9spider_idb_videoscan(
 					{
 						videoID: clue.videoID,
+						clue: clue,
 						complete: function ()
 							{
 								var rdboths = $(".rdbOtherSummary");
 								var rdbyts = $(".rdbYtSummary");
-								var n9vid = rdb_spider.videos_by_id[clue.videoID];
+								var n9vid = rdb_spider.videos_by_id[this.videoID];
 								console.log("sR1231: got a video", n9vid, this);
 								if (n9vid)
 								{
-									div = getVideoCard(n9vid);
+									console.log("sR1265: video found in IDB")
+									var div = getVideoCard(n9vid);
 									rdbInsertVideoCard(rdbyts, div);
 								}	
+								else
+								{
+									console.log("sR1265: video not in idb, presenting user instruction.");
+									var div = getPlaceholderCard(this.clue);
+									rdbInsertVideoCard(rdbyts,div);
+								}
 							},
 						get_comments:false
 					

@@ -132,6 +132,7 @@ function n9spider_idb_videoscan(videoID, options)
 										},
 										complete: function ()
 										{
+											console.log("spid135: complete dbGetVideo");
 											_njn.execute("spider_event",
 														{ event: "idb_finish_videoscan"
 														});
@@ -147,7 +148,11 @@ function n9spider_idb_videoscan(videoID, options)
 					}
 					// conditional above should not return without calling complete function
 				}
-				this.complete.call(this);
+				else
+				{	// if we are not getting comments, we're done, call the complete
+					// otherwise it's called from the rdbCurseComments callback
+					this.complete.call(this);
+				}
 			},
 		options);
 }
@@ -736,22 +741,37 @@ function n9spider_yt_video_div(args)
                                 backgroundColor: bgcolor
                              },
                         video_id: video_id,
-                        id: "card_"+video_id //@@NAMECON: id for card shaped div
+                        id: "card_"+video_id, //@@NAMECON: id for card shaped div
+                        class: "video_card"
                     }
                     );
+
+	
     
     var datestr = new Date(post_date).toString();
     var dateparts = datestr.split(" ");
     dateparts = dateparts.splice(0,5);
     datestr = dateparts.join(" ");
     
-    newel.append ($("<span>",
+    newel.append ($("<div>",
                     {
                         css:{fontSize:"60%",
                              rightMargin:"10px"},
-                        html: datestr +"<br/>"
+                        html: datestr
                     })
                  );
+    ///////////////////
+	///// video thumbnail
+	//////////
+	var thumbel =    $("<a class='video_thumb' video_id='"+ video_id +"'>").append(
+		$("<img>", 
+		{   src : video.get("thumbnail"),
+			width:"90%",
+			css: {paddingLeft:"5px"}
+		})
+		);
+
+    newel.append( thumbel );
     newel.append ($("<span>", 
                         {
                             href: video.get("video_url"),
@@ -774,15 +794,7 @@ function n9spider_yt_video_div(args)
                         }
                     )
                   );
-    var thumbel =    $("<a class='video_thumb' video_id='"+ video_id +"'>").append(
-                        $("<img>", 
-                        {   src : video.get("thumbnail"),
-                            width:"90%",
-                            css: {paddingLeft:"5px"}
-                        })
-                        );
     
-    newel.append( thumbel );
     var vidid = video_id;
     newel.append( $("<div>",
                         {   css: {fontSize:"50%"},
