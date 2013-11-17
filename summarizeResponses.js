@@ -122,7 +122,7 @@ case "comment_bearing":
 	var powerbutts = $("<div>",
 						{	css: {	float:"right",
 									paddingTop:"12px",
-									paddingLeft:"10px"
+									paddingLeft:"10px",
 								 },
 								
 						}
@@ -132,7 +132,6 @@ case "comment_bearing":
 							class:  "USERscanYTVideo",
 							id: 	"rdb_UdbScanYTVideo",
 							value: 	"Load from YouTube",
-						
 							css: {	display:"block",
 									"margin-top":"1px",
 									border:"solid gray 1px",
@@ -166,9 +165,17 @@ case "comment_bearing":
 		{
 			var vid = rdbGetVideoIDFromURL();
 			console.log("sR118:", vid);
-			n9spider_yt_videoscan(vid, function (event)
+			n9spider_yt_videoscan(
 				{
-					console.log("sR148: completed youtube video scan");
+					videoID: vid,
+					complete: function (event)
+						{
+							console.log("sR148: completed youtube video scan");
+						},
+					foreach: function (event)
+						{
+							console.log("sR177 userscan youtube!:", this);
+						}
 				}
 			);
 		}
@@ -220,7 +227,9 @@ case "comment_bearing":
 								text: "Youtube Responses"
 							});
 	var ytsummary = $("<div>",
-						{	class: "rdbYtSummary"
+						{	class: "rdbYtSummary",
+						css: { width: "650px"
+							 },
 						});
 	var othersummaryTitle = $("<div>",
 							{	css:{ textDecoration:"" },
@@ -778,12 +787,11 @@ case "comment_bearing":
 		{	
 			var author_pretty  = clue.author_pretty? clue.author_pretty: clue.author;
 			var author = $("<div>",
-						{	text:author_pretty ,
+						{	html: "video referred by: <b>"+  author_pretty  +"</b>" ,
 							css: {	fontSize:"115%",
 									display:"inline-block",
 									backgroundColor:"white",
 									padding: "2px",
-									fontWeight: "bold",
 									color: "black"
 								 }
 						});
@@ -859,7 +867,7 @@ case "comment_bearing":
 		var provnotes = $("<div>", 
 						{
 						});
-		///////////
+		/////////// TAGS
 		//
 		//  ///////   //    //////  //////
 		//    //    // //  //      /// 
@@ -933,12 +941,44 @@ case "comment_bearing":
 		if (extant.length >0)
 		{
 			extant.attr("id", null);
-			extant.replaceWith(newdiv);
-			return;
+			extant.hide("blind", {direction:"horizontal",
+								  complete: function ()
+								  	{
+								  		//console.log("sR939:complete slideout");
+								  		$(this).remove();
+								  	}		
+								  }, 300)
+			//extant.replaceWith(newdiv);
 		}
 		newdiv.hide();
-		parent.prepend(newdiv);
-		newdiv.slideDown();
+		var inserted = false;
+		var siblings = parent.children("div");
+		for (var n = 0; n < siblings.length; n++)
+		{
+			var sibl = $(siblings[n]);
+			var sibltimestamp = parseInt(sibl.attr("data-clue_time"));
+			var timestamp     = parseInt(newdiv.attr("data-clue_time"));
+			if (!sibltimestamp)
+			{
+				console.log("sR955 sibl:",sibl);
+			}
+			console.log("time and sibletime", timestamp, sibltimestamp, timestamp > sibltimestamp? ">":"<"); 
+			
+			if (timestamp >= sibltimestamp)
+			{
+				sibl.before(newdiv);
+				inserted = true;
+				break;
+			}
+			
+		}
+		
+		if (! inserted)
+		{
+			parent.append(newdiv);
+		}
+		
+		newdiv.show("blind", {direction:"horizontal"}, 300);
 	
 	}
 	function rdbInsertClueSorted(parentdiv, newdiv)
@@ -1206,8 +1246,9 @@ case "comment_bearing":
 			tehdiv = newclue;
 		}
 		
-		function getVideoCard(n9video)
+		function getVideoCard(n9video, clue)
 		{
+			
 			var div = n9spider_yt_video_div(
 							{
 								n9_video: n9video
@@ -1215,12 +1256,16 @@ case "comment_bearing":
 			div.css("width","150px");
 			div.css("height", "200px");
 			div.css("float","left");
+			if (clue && clue.timestamp)
+			{
+				div.attr("data-clue_time", clue.timestamp);
+			}
 			return div;
 		}
 		function getPlaceholderCard(clue)
 		{
 			var video_id = clue.videoID;
-			console.log("sR1223: clue =", clue);
+			console.log("sR1250: clue =", clue);
 			  var newel = $("<div>",
                     {   css: {  
                                 border:"solid black 1px",
@@ -1230,16 +1275,73 @@ case "comment_bearing":
                                 backgroundColor: "lightYellow"
                              },
                         video_id: video_id,
-                        text: "Video Not Available, Load from Youtube for Info",
                         id: "card_"+video_id, //@@NAMECON: id for card shaped div
                         class: "video_card"
                     }
                     );
+        	var note = $("<div>",
+        				{	text: "Video NOT in your iDB",
+        					css: {fontVariant:"small-caps"
+        							}
+        				});
+        	newel.append(note);
             newel.css("width","150px");
 			newel.css("height", "200px");
 			newel.css("float","left");
-			return newel
-		}
+			newel.attr("data-clue_time", clue.timestamp);
+			var responseagent = clue.author_pretty? clue.author_pretty: clue.author;
+			var videoid = clue.videoID;
+			var responseagentEL = $("<div>",
+									{	css: {	
+											 },
+										html: "<br/>video referred by: <br/><i>"
+												+ responseagent
+												+ "@"
+												+ newel.attr("data-clue_time")
+												+ "</i>"
+									});
+									
+			newel.append(responseagentEL);
+			
+			if (true)
+			{
+				var expl = $("<div>",
+							{	text: "To get video information scan videos with the button below:",
+								css: { marginTop: "10px",
+										}
+							});
+				newel.append(expl);
+				var myloader = $ ("<input>",
+						{	type:	"submit",
+							class:  "USERloadYTvideo",
+							id: 	"rdb_UdbLoadYTVideo",
+							value: 	"Load "+videoid,
+							css: {	display:"block",
+									"margin-top":"1px",
+									border:"solid gray 1px",
+									fontSize: "75%",
+									width:"12em"
+								 }
+						}
+					 );
+				myloader.attr("data-video_id", videoid);
+				myloader.click( function (event) {
+						n9spider_yt_videoscan({ videoID: $(this).attr("data-video_id"),
+												n9complete: function () {
+														console.log("sR1312: video", this.n9video,
+															 $(this).data("clue"));
+														div = getVideoCard(this.n9video, $(this).data("clue"));
+														var rdbyts = $(".rdbYtSummary");
+			
+														rdbInsertVideoCard(rdbyts, div);
+														}	
+											   } );
+					});
+				newel.append(myloader);
+				myloader.data(clue);
+			}
+			return newel;
+		} // end of get placeholder
 		
 		if (clue.protocol == "youtube2013")
 		{
@@ -1250,7 +1352,7 @@ case "comment_bearing":
 			console.log("sR448:", clue.videoID, n9vid);
 			if (n9vid)
 			{
-				var div = getVideoCard(n9vid);
+				var div = getVideoCard(n9vid,clue);
 				rdbInsertVideoCard(rdbyts,div);
 			}
 			else
@@ -1268,13 +1370,16 @@ case "comment_bearing":
 								console.log("sR1231: got a video", n9vid, this);
 								if (n9vid)
 								{
-									console.log("sR1265: video found in IDB")
+									console.log("sR1353: video found in IDB")
 									var div = getVideoCard(n9vid);
+									var cluetime = this.clue.timestamp;
+									console.log("sR1356: cluetime", cluetime);
+									div.attr("data-clue_time", cluetime);
 									rdbInsertVideoCard(rdbyts, div);
 								}	
 								else
 								{
-									console.log("sR1265: video not in idb, presenting user instruction.");
+									console.log("sR1362: video not in idb, presenting user instruction.");
 									var div = getPlaceholderCard(this.clue);
 									rdbInsertVideoCard(rdbyts,div);
 								}
@@ -1383,10 +1488,7 @@ case "comment_bearing":
 			console.log("sR448:", clue.videoID, n9vid);
 			if (n9vid)
 			{
-				var div = n9spider_yt_video_div({n9_video: n9vid} );
-				div.css("width","150px");
-				div.css("height", "200px");
-				div.css("float","left");
+				div = getVideoCard(n9vid, clue);
 				rdbyts.append(div);
 			}
 		}

@@ -160,8 +160,12 @@ function n9spider_idb_videoscan(videoID, options)
 
 function n9spider_yt_videoscan(video_id, complete_func, options)
 {
-	// this function has weird option names ... videoID and n9complete
-
+	// @@NOTE: this function has weird option names ... videoID and n9complete
+	// @@NOTE: this function is going to be checking idb for stuff it already has
+	// @@    : since youtube isn't updating those types of records, it's just new ones.
+	// @@    : HOWEVER: it does go ahead and contact youtube about the video in question
+	// @@    : because any caller has likely already checked that. ? right ?
+	
     //var enc_func = complete_func;
     if (typeof(video_id) == "object")
     {
@@ -174,6 +178,7 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
     	options.videoID = video_id;
     	options.n9complete = complete_func;
     }
+    
     $.ajax({type: "get",
             dataType: "json",
             url: "http://gdata.youtube.com/feeds/api/videos/"+options.videoID+"?alt=json",
@@ -200,7 +205,7 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
                     if ("get_comments" in this) 
                     	{ get_comments = options.get_comments}
                     else 
-                    	{get_comments = true; } // this is the @@DEFAULT
+                    	{get_comments = false; } // this is the @@DEFAULT
                     
                     var vid = n9spider_yt_video_from_entry(entry, options);
                     
@@ -227,10 +232,13 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
 								success: function (data) {
 									//c/onsole.log("spid93: comments reply");
 									//c/onsole.log(data);
-									n9spider_yt_feedparse_comments( enclosed_username, 
-																	data.feed,
-																	map,
-																	enclosed_create_domicile);
+									n9spider_yt_feedparse_comments( 
+										{ 	username:	enclosed_username, 
+											feed:		data.feed,
+											map: 		map,
+											create_domicile: enclosed_create_domicile,
+											foreach: this.foreach,
+										});
 									var nexturl = n9spider_yt_getlink(data.feed.link, "next");
 					
 						
@@ -533,6 +541,19 @@ function n9spider_comment2map(comment, map, create_domicile)
 
 function n9spider_yt_feedparse_comments(username, feed, map, create_domicile)
 {
+	var options = {};
+	
+	if (typeof(username) == "object")
+	{
+		options = username;
+		username = options.username;
+		feed = options.feed;
+		map = options.map;
+		map = options.create_domicile;
+	}
+	
+	var each_comment_func = options.foreach;
+	
     var commentobjs = feed.entry;
     var residentdict = {}; // to not draw more than one relat per vid
     //c/onsole.log("spid93:comment feed");
@@ -571,6 +592,11 @@ function n9spider_yt_feedparse_comments(username, feed, map, create_domicile)
         _njn.execute("spider_event", {  event:"comment_scan",
                                         comment:comment
                                      });
+    	
+    	if (options && options.foreach)
+    	{
+    		options.foreach.call(options);
+    	}
     	
         //c/onsole.log("spid118: "+ author_from_uri+" " +author);
         //c/onsole.log(map.items_by_resident);
@@ -775,7 +801,7 @@ function n9spider_yt_video_div(args)
     newel.append ($("<span>", 
                         {
                             href: video.get("video_url"),
-                            html:"<b>"+args.n9_video.get("author")+"</b>: ",
+                            html:"video by: <b>"+args.n9_video.get("author")+"</b> ",
                             css:{   
                                     fontStyle:"italic",
                                     fontSize:"70%"

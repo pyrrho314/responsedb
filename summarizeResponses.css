@@ -23,3 +23,11 @@
 .USERdbCurseVideo { background-color: "#d0d0d0";
 					border-radius: "5px";ucation
 				  }
+				  
+.clue_link  {
+		display:none;
+	}
+	
+.clue_link_label {
+		display:none;
+		}
