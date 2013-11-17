@@ -172,10 +172,12 @@ case "comment_bearing":
 						{
 							console.log("sR148: completed youtube video scan");
 						},
-					foreach: function (event)
+					foreach: function (comment) // @@WONDER: should this be called foreach_comment
 						{
-							console.log("sR177 userscan youtube!:", this);
-						}
+							console.log("sR177 comments from videoscan youtube!:", this);
+							rdb_spider.checkCommentForClues(comment);
+						},
+					get_comments:true
 				}
 			);
 		}
@@ -1296,9 +1298,9 @@ case "comment_bearing":
 											 },
 										html: "<br/>video referred by: <br/><i>"
 												+ responseagent
-												+ "@"
+												+ "<span font='font-size:50%'>@"
 												+ newel.attr("data-clue_time")
-												+ "</i>"
+												+ "</span></i>"
 									});
 									
 			newel.append(responseagentEL);
@@ -1338,7 +1340,7 @@ case "comment_bearing":
 											   } );
 					});
 				newel.append(myloader);
-				myloader.data(clue);
+				myloader.data("clue",clue);
 			}
 			return newel;
 		} // end of get placeholder

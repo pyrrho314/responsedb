@@ -203,14 +203,15 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
                     
                     var get_comments;
                     if ("get_comments" in this) 
-                    	{ get_comments = options.get_comments}
+                    	{ get_comments = this.get_comments}
                     else 
                     	{get_comments = false; } // this is the @@DEFAULT
                     
                     var vid = n9spider_yt_video_from_entry(entry, options);
                     
                     
-                    if (true)
+                    /*
+                    if (false)
                     { //@@WARNING probably bad for map integration as is
                     	n9spider_yt_videofeed_parse(feed, 
                     						{username:username,
@@ -221,22 +222,31 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
                                         	 get_comments: get_comments
                                         	});
                     }
-                    console.log("spid126:", this);
+                    */
+                    
+                    console.log("spid126:", get_comments, this);
                     if (get_comments)
                     {
                     	console.log("spid129:", vid);
-                    	var commentfeedurl = vid.get("comments_feed");
-                    	$.ajax({type:"get",
+                    	var commentfeedurl = vid.get("comments_feed")+"?alt=json";
+                    	n9spider_yt_recurseComments(
+                    		{	username: username,
+                    			comments_url: commentfeedurl,
+                    			max: 250,
+                    			foreach: this.foreach
+                    		});
+                    	/*
+                    		$.ajax({type:"get",
 								dataType:"json",
 								url: commentfeedurl,
 								success: function (data) {
 									//c/onsole.log("spid93: comments reply");
 									//c/onsole.log(data);
 									n9spider_yt_feedparse_comments( 
-										{ 	username:	enclosed_username, 
+										{ 	username:	username, 
 											feed:		data.feed,
-											map: 		map,
-											create_domicile: enclosed_create_domicile,
+											map: 		null,
+											create_domicile: false,
 											foreach: this.foreach,
 										});
 									var nexturl = n9spider_yt_getlink(data.feed.link, "next");
@@ -246,6 +256,7 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
 								}
 							   }
 							  );
+						*/
                     } 
                     if (this.n9complete)
                     {
@@ -422,6 +433,49 @@ function n9spider_yt_videofeed_parse(feed, options)
     }
 }
 
+function n9spider_yt_recurseComments(options)
+{
+	var username = options.username;
+	var commentsurl = options.comments_url;
+	var max = options.max ? options.max: 20;
+
+	// @@ NOTE: DOES NOT RECURSE YET!  use setTimeout
+	var enclosed_username = username;
+	$.ajax({type:"get",
+		dataType:"json",
+		url: commentsurl,
+		context:options,
+		success: function (data) {
+			//c/onsole.log("spid93: comments reply");
+			//c/onsole.log(data);
+			var options = $.extend(
+				{	username:this.username, 
+					feed: data.feed,
+					map: null,
+					create_domicile: false
+				}, this);
+				
+			n9spider_yt_feedparse_comments(options);
+			var nexturl = n9spider_yt_getlink(data.feed.link, "next");
+			
+				
+			console.log("spid315: next comment url --> "+nexturl);
+			console.log("spid316: ", _yt_spiderlib.comments_by_video_id);
+			console.log("spid317: ", data.feed.entry[0]);
+			var videoid = n9spider_yt_get_videoid_from_commententry(data.feed.entry[0]);
+			var numcom = _yt_spiderlib.comments_by_video_id[videoid].length;
+			console.log("spid319: number comments already ", numcom, "vs", max);
+			
+			if (numcom < max && nexturl) 
+				setTimeout(n9spider_yt_recurseComments, 1500,{username: username,
+															  comments_url: nexturl,
+														    max: 250
+														     });
+		}
+	   }
+	  );
+}
+        
 function n9spider_yt_getlink(links, id, strip_prot)
 {
     for (var n = 0; n<links.length; n++)
@@ -586,17 +640,16 @@ function n9spider_yt_feedparse_comments(username, feed, map, create_domicile)
                                     video_id: vidid
                                 });
                                 
-        
-        
+    	if (options && options.foreach)
+    	{
+    		options.foreach.call(options, comment);
+    	}
+
         _njn.execute("spider_comment", {comment:comment});
         _njn.execute("spider_event", {  event:"comment_scan",
                                         comment:comment
                                      });
     	
-    	if (options && options.foreach)
-    	{
-    		options.foreach.call(options);
-    	}
     	
         //c/onsole.log("spid118: "+ author_from_uri+" " +author);
         //c/onsole.log(map.items_by_resident);
