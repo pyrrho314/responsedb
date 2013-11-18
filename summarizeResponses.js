@@ -1,6 +1,334 @@
 console.log("sr1: summarizeResponses.js extension acting on", window.location.href);
 
 
+//////////////////////
+/// UTILITY FUNCTIONS
+///
+
+function createSourceTag(clue)
+{
+	var source = clue.source ? clue.source : "unidentified"
+	var sourcekey = source.split(".")[0];
+	var sourceel = $("<div>",
+					{	text: sourcekey,
+						css:{ 	//float: "left",
+								display: "inline-block",
+								fontSize:"70%",
+								color: "white",
+								backgroundColor: "#808080",
+								padding:"1px",
+								paddingLeft:"3px",
+								paddingRight:"3px",
+								margin:"1px"
+							}
+					})
+	return sourceel;
+}
+
+function createSiteTag(clue)
+{
+	var site = clue.site ? clue.site : null;
+	var rcolor = clue.rcolor ? clue.rcolor: "white";
+	var siteel = $("<div>",
+			{	text: site,
+				css:{ 	//float: "left",
+						display: "inline-block",
+						fontSize:"70%",
+						color: rcolor,
+						backgroundColor: "#505050",
+						padding:"1px",
+						paddingLeft:"3px",
+						paddingRight:"3px",
+						margin:"1px"
+					}
+			})
+	return siteel;
+}
+var _sR_numcomments = 0;
+var _sR_checkOpts = {
+	source: "content_scan",
+	author: "anonymous",
+
+	callback: function (clue){
+		var iconURL = chrome.extension.getURL("icon48.png"); // @@CHROME @@SPECIFIC
+		console.log("sR54:", iconURL);
+		if (!this.count)
+		{
+			this.count = 1;
+		}
+		else
+		{
+			this.count++;
+		}
+		console.log("sR262: clue callbacks from check comments %%%%%%%%%%%%%%", this.count,clue, this);
+		
+		var elID = url2id(clue.URL+clue.author, "rdb_clue_link");
+		var url = clue.URL;
+		var videoID = clue.videoID;
+		var comment = this.commentEL;
+		if (url)
+		{
+			var RDBextant;
+			try 
+			{
+				RDBextant = $("#"+elID);	
+			}
+			catch (err)
+			{
+				RDBextant = null;
+			}
+		
+			if (RDBextant && RDBextant.length ==0)
+			{
+				var rdbgl = $("<div>",
+								{
+									css: {	padding: "2px",
+											border:"solid #4040a0 1px"
+										 },
+									id: elID,
+									class: "rdb_link"
+								});
+					var icon = $("<img>",
+							{
+								src: iconURL,
+								css: { display: "inline-block",
+										 //float: "left",
+										height: "16px"
+									 }
+							});
+				
+					rdbgl.append(icon);
+				
+				var newlink = $("<a>",
+							{
+								href:url,
+								html: " <span style='font-size:70%'> [RDB Generated] </span> ",
+								css: {	color:"blue"
+									 }
+							})
+							
+				//haslink.prepend(newlink);
+
+				
+				rdbgl.append(newlink);
+				rdbgl.append(createSourceTag(clue)).append(createSiteTag(clue));
+				
+				var extants = comment.find(".rdb_link");
+				if (extants.length)
+				{
+					extants.last().css("border-bottom", "none");
+					rdbgl.css("border-top", "none");
+					extants.last().after(rdbgl);
+				}
+				else
+				{
+					var content = comment.html();
+					var tehurl = clue.URL;
+					content = content.replace(clue.match, "<a href='"+tehurl+"'>"+clue.match+"</a>");
+					comment.html(content)
+					comment.prepend(rdbgl);
+				}
+								
+			}
+		}
+	}
+};
+
+function convert2linksNEW()
+{	
+	// get comments from the page itself
+	var comments = $(".Ct"); //@@DOCO: class used to get comments was comment-text
+	//c/onsole.log("sR323: ",comments.length, "comments in page");
+	console.log("sR11: convert2links", comments.length);
+	
+	if (comments.length == _sR_numcomments)
+	{
+		return;
+	}
+	else
+	{
+		_sR_numcomments = comments.length;
+	}
+	for (var n = 0; n<comments.length; n++)
+	{
+		console.log("sR105: comment", n, "of", comments.length);
+		var comment = $(comments[n]);
+		var text = comment.text();
+		console.log("sR107: text: ",text);
+		_sR_checkOpts.commentEL = comment;
+	
+		var uname = $(comment.parent().find("p.metadata > .author > .yt-user-name")[0]);
+		var author = null;
+		if (uname.length > 0)
+		{
+			uname  = uname[0];
+			author = $(uname).text();
+		}
+		else
+		{
+			author = "unknown";
+		}
+		_sR_checkOpts.author = author;
+	
+		var ytime = $(comment.parent().find("p.metadata > .time > a")[0]);
+		//c/onsole.log("CGE RULES:", ytime.text());
+		if (ytime.length)
+			_sR_checkOpts.estimated_timestamp = timeago2time(ytime.text());
+	
+	
+		rdb_spider.checkTextForClues(text, _sR_checkOpts);
+	}
+}
+
+	function convert2linksOLD(){
+		// console.log("sR103: checking for links to convert");
+	
+		for (genlinktypename in genericVideoLinkTypes)
+		{
+			var genlinktype = genericVideoLinkTypes[genlinktypename];
+		
+			//console.log("sR331:", genlinktype);
+			var indicator = genlinktype.indicator;
+			var regex = genlinktype.regex;
+			var mkURL = genlinktype.mkURL;
+			var mkID = genlinktype.mkID;
+			var mkClue = genlinktype.mkClue;
+		
+			var haslinks = $(".comment-text:contains('"+indicator+"')"); //.not(":contains('RDB')");
+			//console.log("sR105: found ", haslinks.length, "instances of", genlinktype.site );
+		
+			for (var n =0;  n<haslinks.length; n++)
+			{
+				var haslink = $(haslinks[n]);
+				var uname = haslink.parent().find(".yt-user-name");
+				var author = null;
+			
+				if (uname.length > 0)
+				{
+					uname  = uname[0];
+					author = $(uname).text();
+				}
+				else
+				{
+					author = "unknown";
+				}
+				var comment = haslink.text()
+				var patt = regex;
+				var matches = comment.match(patt);
+				try 
+				{
+					if (matches)
+					{
+						for (var j=0; j<matches.length; j++)
+						{
+							//console.log("sR181:", regex, comment);
+							var groups = patt.exec(matches[j]);
+							// console.log("sR183:", comment.match(patt));
+							if (groups) 
+							{
+								var tehURL = mkURL(groups);
+								var tehID = mkID(groups);
+								//console.log("sR361:", tehURL,  JSON.stringify(groups));
+								var tehID =  "rdblink_"+ tehURL.replace(/\.|\/|\?|=|:/g, "_");
+							
+							
+								if (tehURL)
+								{
+									var RDBextant;
+									try 
+									{
+										RDBextant = $("#"+tehID);	
+									}
+									catch (err)
+									{
+										RDBextant = null;
+									}
+									var videoID = mkID(groups);
+									if (RDBextant && RDBextant.length == 0)
+									{
+										//console.log("sR202: linking ", RDBextant, tehURL, tehID);
+										//console.log("sR203: extant length", RDBextant.length);
+									
+										var tehurl = tehURL;
+										var icon = $("<img>",
+													{
+														src: iconURL,
+														css: { display: "table-cell",
+																 float: "left",
+																height: "16px"
+															 }
+													});
+										var newlink = $("<a>",
+													{
+														href:tehurl,
+														html: " <span style='font-size:70%'> [RDB Generated] </span> ",
+														css: {	color:"blue"
+															 }
+													}).append($("<b>", {text:genlinktype.site + ": " + videoID}));
+										//haslink.prepend(newlink);
+			
+										var rdbgl = $("<div>",
+														{
+															css: {	padding: "2px",
+																	border:"solid #4040a0 1px"
+																 },
+															id: tehID,
+															class: "rdb_link"
+														});
+										rdbgl.append(icon);
+										rdbgl.append(newlink);
+									
+										// haslink.prepend(rdbgl);
+										var extants = haslink.find(".rdb_link");
+										if (extants.length)
+										{
+											extants.last().css("border-bottom", "none");
+											rdbgl.css("border-top", "none");
+											extants.last().after(rdbgl);
+										}
+										else
+										{
+											haslink.prepend(rdbgl);
+										}
+									
+										// THIS IS WHERE WE HAVE ADDED A LINK... MAKE IT A HIND
+										tehclue = mkClue.call(genlinktype, groups);
+										tehclue.source = "content_scan";
+										tehclue.content = comment; 
+										tehclue.author = author;
+										//@review: misnomer... comment should be N9Comment obj not text
+									
+										rdb_spider.addClue(tehclue);
+									}
+								}
+							}	
+						}
+					 }
+					 else
+					 {
+						// console.log("sR233:", patt, comment);	
+					 }
+				}
+				catch (err)
+				{
+					console.log("sR238:caught ",err);
+					console.log("sR238: ERROR", patt, comment);
+					throw err;
+				}
+			}
+		}
+	}
+
+	// development switch for refactoring convert2liinks
+	convert2links = convert2linksNEW;
+///
+/// END OF UTILITY FUNCTIONS @@
+///
+//////////////////
+///
+/// START GIANT url based MODE SWITCH
+///
+
 var command = "comment_bearing"
 if (window.location.href.indexOf("apis.google.com")>=0) command = "comment_iframe";
 
@@ -10,6 +338,11 @@ if (window.location.href.indexOf("apis.google.com")>=0) command = "comment_ifram
 console.log("sr10: command =", command);
 switch(command)
 {
+case "comment_iframe":
+	$("body").ready( function () {convert2links()});
+	break;
+
+
 case "comment_bearing":
 
 	var MASSIVE_DEBUG = false;
@@ -225,7 +558,7 @@ case "comment_bearing":
 
 
 	var ytsummaryTitle = $("<div>",
-							{	css:  { textDecoration:"underline" },
+							{	css:  {  },
 								text: "Youtube Responses"
 							});
 	var ytsummary = $("<div>",
@@ -235,7 +568,7 @@ case "comment_bearing":
 						});
 	var othersummaryTitle = $("<div>",
 							{	css:{ textDecoration:"" },
-								text: "Other Responses"
+								text: "Link Responses"
 							});
 
 	var othersummary = $("<div>",
@@ -372,84 +705,7 @@ case "comment_bearing":
 	var genericVideoLinkTypes = gvtl;
 
 
-	var _sR_checkOpts = {
-		source: "content_scan",
-		author: "anonymous",
 	
-		callback: function (clue){
-			if (!this.count)
-			{
-				this.count = 1;
-			}
-			else
-			{
-				this.count++;
-			}
-			console.log("sR262: clue callbacks from check comments %%%%%%%%%%%%%%", this.count);
-			return; 
-			var elID = url2id(clue.URL+clue.author, "rdb_clue_link");
-			var url = clue.URL;
-			var videoID = clue.videoID;
-			var comment = this.commentEL;
-			if (url)
-			{
-				var RDBextant;
-				try 
-				{
-					RDBextant = $("#"+elID);	
-				}
-				catch (err)
-				{
-					RDBextant = null;
-				}
-			
-				if (RDBextant && RDBextant.length ==0)
-				{
-					var icon = $("<img>",
-								{
-									src: iconURL,
-									css: { display: "table-cell",
-											 float: "left",
-											height: "16px"
-										 }
-								});
-					var newlink = $("<a>",
-								{
-									href:url,
-									html: " <span style='font-size:70%'> [RDB Generated] </span> ",
-									css: {	color:"blue"
-										 }
-								}).append($("<b>", {text:genlinktype.site + ": " + videoID}));
-					//haslink.prepend(newlink);
-
-					var rdbgl = $("<div>",
-									{
-										css: {	padding: "2px",
-												border:"solid #4040a0 1px"
-											 },
-										id: elID,
-										class: "rdb_link"
-									});
-					rdbgl.append(icon);
-					rdbgl.append(newlink);
-				
-					var extants = comment.find(".rdb_link");
-					if (extants.length)
-					{
-						extants.last().css("border-bottom", "none");
-						rdbgl.css("border-top", "none");
-						extants.last().after(rdbgl);
-					}
-					else
-					{
-						comment.prepend(rdbgl);
-					}
-									
-				}
-			}
-		}
-	};
-
 	function timeago2time(timeago)
 	{
 		// convert youtube comment "time ago string" to date approximation.
@@ -506,193 +762,7 @@ case "comment_bearing":
 		return timestamp;
 	}
 
-	var _sR_numcomments = 0;
-	function convert2linksNEW()
-	{	
 	
-		// get comments from the page itself
-		var comments = $(".comment-text");
-		//c/onsole.log("sR323: ",comments.length, "comments in page");
-		if (comments.length == _sR_numcomments)
-		{
-			return;
-		}
-		else
-		{
-			_sR_numcomments = comments.length;
-		}
-		for (var n = 0; n<comments.length; n++)
-		{
-			//c/onsole.log("sR324: comment", n, "of", comments.length);
-			var comment = $(comments[n]);
-			var text = comment.text();
-			_sR_checkOpts.commentEL = comment;
-		
-			var uname = $(comment.parent().find("p.metadata > .author > .yt-user-name")[0]);
-			var author = null;
-			if (uname.length > 0)
-			{
-				uname  = uname[0];
-				author = $(uname).text();
-			}
-			else
-			{
-				author = "unknown";
-			}
-			_sR_checkOpts.author = author;
-		
-			var ytime = $(comment.parent().find("p.metadata > .time > a")[0]);
-			//c/onsole.log("CGE RULES:", ytime.text());
-			if (ytime.length)
-				_sR_checkOpts.estimated_timestamp = timeago2time(ytime.text());
-		
-		
-			rdb_spider.checkTextForClues(text, _sR_checkOpts)
-		}
-	}
-
-	function convert2linksOLD(){
-		// console.log("sR103: checking for links to convert");
-	
-		for (genlinktypename in genericVideoLinkTypes)
-		{
-			var genlinktype = genericVideoLinkTypes[genlinktypename];
-		
-			//console.log("sR331:", genlinktype);
-			var indicator = genlinktype.indicator;
-			var regex = genlinktype.regex;
-			var mkURL = genlinktype.mkURL;
-			var mkID = genlinktype.mkID;
-			var mkClue = genlinktype.mkClue;
-		
-			var haslinks = $(".comment-text:contains('"+indicator+"')"); //.not(":contains('RDB')");
-			//console.log("sR105: found ", haslinks.length, "instances of", genlinktype.site );
-		
-			for (var n =0;  n<haslinks.length; n++)
-			{
-				var haslink = $(haslinks[n]);
-				var uname = haslink.parent().find(".yt-user-name");
-				var author = null;
-			
-				if (uname.length > 0)
-				{
-					uname  = uname[0];
-					author = $(uname).text();
-				}
-				else
-				{
-					author = "unknown";
-				}
-				var comment = haslink.text()
-				var patt = regex;
-				var matches = comment.match(patt);
-				try 
-				{
-					if (matches)
-					{
-						for (var j=0; j<matches.length; j++)
-						{
-							//console.log("sR181:", regex, comment);
-							var groups = patt.exec(matches[j]);
-							// console.log("sR183:", comment.match(patt));
-							if (groups) 
-							{
-								var tehURL = mkURL(groups);
-								var tehID = mkID(groups);
-								//console.log("sR361:", tehURL,  JSON.stringify(groups));
-								var tehID =  "rdblink_"+ tehURL.replace(/\.|\/|\?|=|:/g, "_");
-							
-							
-								if (tehURL)
-								{
-									var RDBextant;
-									try 
-									{
-										RDBextant = $("#"+tehID);	
-									}
-									catch (err)
-									{
-										RDBextant = null;
-									}
-									var videoID = mkID(groups);
-									if (RDBextant && RDBextant.length == 0)
-									{
-										//console.log("sR202: linking ", RDBextant, tehURL, tehID);
-										//console.log("sR203: extant length", RDBextant.length);
-									
-										var tehurl = tehURL;
-										var icon = $("<img>",
-													{
-														src: iconURL,
-														css: { display: "table-cell",
-																 float: "left",
-																height: "16px"
-															 }
-													});
-										var newlink = $("<a>",
-													{
-														href:tehurl,
-														html: " <span style='font-size:70%'> [RDB Generated] </span> ",
-														css: {	color:"blue"
-															 }
-													}).append($("<b>", {text:genlinktype.site + ": " + videoID}));
-										//haslink.prepend(newlink);
-			
-										var rdbgl = $("<div>",
-														{
-															css: {	padding: "2px",
-																	border:"solid #4040a0 1px"
-																 },
-															id: tehID,
-															class: "rdb_link"
-														});
-										rdbgl.append(icon);
-										rdbgl.append(newlink);
-									
-										// haslink.prepend(rdbgl);
-										var extants = haslink.find(".rdb_link");
-										if (extants.length)
-										{
-											extants.last().css("border-bottom", "none");
-											rdbgl.css("border-top", "none");
-											extants.last().after(rdbgl);
-										}
-										else
-										{
-											haslink.prepend(rdbgl);
-										}
-									
-										// THIS IS WHERE WE HAVE ADDED A LINK... MAKE IT A HIND
-										tehclue = mkClue.call(genlinktype, groups);
-										tehclue.source = "content_scan";
-										tehclue.content = comment; 
-										tehclue.author = author;
-										//@review: misnomer... comment should be N9Comment obj not text
-									
-										rdb_spider.addClue(tehclue);
-									}
-								}
-							}	
-						}
-					 }
-					 else
-					 {
-						// console.log("sR233:", patt, comment);	
-					 }
-				}
-				catch (err)
-				{
-					console.log("sR238:caught ",err);
-					console.log("sR238: ERROR", patt, comment);
-					throw err;
-				}
-			}
-		}
-	}
-
-	// development switch for refactoring convert2liinks
-	convert2links = convert2linksNEW;
-
 
 
 	///////////////////////////////
@@ -841,11 +911,54 @@ case "comment_bearing":
 			//c/onsole.log("sR392: estimated commenttime", commenttime);
 			}
 		}
+	
+	
+			   /////////// TAGS //////////////////////
+			  // 								   //
+			 //  ///////   //    //////  //////   //
+			//     //    // //  //      ///      //
+		   //	  //   /////// // ////     ///  //
+		  //     //   //   // /////// ///////  //
+		 //                                   //
+		//////// SOURCE DISPLAY ELEMENT ///////
+		
+		///// PROVNOTES
+		/////
+		var provnotes = $("<div>", 
+						{
+						});
+		
+		
+		var sourceel = createSourceTag(clue);
+		provnotes.append(sourceel);
+	
+		///// SITE DISPLAY ELEMENT
+		var site = clue.site ? clue.site : null;
+		if (site)
+		{
+			var siteel = createSiteTag(clue);
+			provnotes.append(siteel);
+		}
+	
+	
+	
 		//
-		//////
-	
-	
-	
+		//
+		//
+		//
+		// 
+		//rdbgl.append(rlabel);
+		rdbgl.append(linklabel);
+		rdbgl.append(newlink);
+		    ///////////////////
+		   //               //
+		  //  END OF TAGS  //
+		 //               //
+		///////////////////
+		
+		
+		rdbgl.append(provnotes);
+		
 		if (clue.content)
 		{
 			// first, make the matched text a link.
@@ -864,69 +977,8 @@ case "comment_bearing":
 						});
 			rdbgl.append(cont);
 		}
-		///// PROVNOTES
-		/////
-		var provnotes = $("<div>", 
-						{
-						});
-		/////////// TAGS
-		//
-		//  ///////   //    //////  //////
-		//    //    // //  //      /// 
-		//	 //   /////// // ////     ///
-		//  //   //   // /////// ///////
-		// 	
-		///// SOURCE DISPLAY ELEMENT
-		var source = clue.source ? clue.source : "unidentified"
-		var sourcekey = source.split(".")[0];
-		var sourceel = $("<div>",
-						{	text: sourcekey,
-							css:{ 	//float: "left",
-									display: "inline-block",
-									fontSize:"70%",
-									color: "white",
-									backgroundColor: "#808080",
-									padding:"1px",
-									paddingLeft:"3px",
-									paddingRight:"3px",
-									margin:"1px"
-								}
-						})
-		provnotes.append(sourceel);
-	
-		///// SITE DISPLAY ELEMENT
-		var site = clue.site ? clue.site : null;
-		if (site)
-		{
-			var siteel = $("<div>",
-						{	text: site,
-							css:{ 	//float: "left",
-									display: "inline-block",
-									fontSize:"70%",
-									color: rcolor,
-									backgroundColor: "#505050",
-									padding:"1px",
-									paddingLeft:"3px",
-									paddingRight:"3px",
-									margin:"1px"
-								}
-						})
-			provnotes.append(siteel);
-		}
-	
-	
-	
-		//
-		//
-		//
-		//
-		// 
-		//rdbgl.append(rlabel);
-		rdbgl.append(linklabel);
-		rdbgl.append(newlink);
-	
-		rdbgl.append(provnotes);
-	
+		
+		
 	
 	
 		return rdbgl;
@@ -1109,7 +1161,7 @@ case "comment_bearing":
 	  }
 	  if (_sR_scan_html_for_comments)
 	  {
-			dconvert2links(); 
+			convert2links(); 
 	  }		
 	});
 
@@ -1296,10 +1348,10 @@ case "comment_bearing":
 			var responseagentEL = $("<div>",
 									{	css: {	
 											 },
-										html: "<br/>video referred by: <br/><i>"
+										html: "<br/>video referred by: <br/><br/><i>"
 												+ responseagent
-												+ "<span font='font-size:50%'>@"
-												+ newel.attr("data-clue_time")
+												+ "<br/><br/><span style='font-size:100%'>"
+												+ new Date(parseInt(newel.attr("data-clue_time"))).toLocaleString()
 												+ "</span></i>"
 									});
 									
@@ -1308,9 +1360,9 @@ case "comment_bearing":
 			if (true)
 			{
 				var expl = $("<div>",
-							{	text: "To get video information scan videos with the button below:",
+							{	text: "To get information on this video from YouTube, press below.",
 								css: { marginTop: "10px",
-										}
+									 }
 							});
 				newel.append(expl);
 				var myloader = $ ("<input>",
@@ -1318,21 +1370,29 @@ case "comment_bearing":
 							class:  "USERloadYTvideo",
 							id: 	"rdb_UdbLoadYTVideo",
 							value: 	"Load "+videoid,
-							css: {	display:"block",
-									"margin-top":"1px",
-									border:"solid gray 1px",
-									fontSize: "75%",
-									width:"12em"
+							css: {	display:      "block",
+									"margin-top": "1px",
+									border:       "solid gray 1px",
+									fontSize:     "75%",
+									width:        "12em"
 								 }
 						}
 					 );
 				myloader.attr("data-video_id", videoid);
 				myloader.click( function (event) {
 						n9spider_yt_videoscan({ videoID: $(this).attr("data-video_id"),
+												myloaderBUTT: $(this),
 												n9complete: function () {
-														console.log("sR1312: video", this.n9video,
-															 $(this).data("clue"));
-														div = getVideoCard(this.n9video, $(this).data("clue"));
+														
+														var clue = null;
+														var clue_url = this.myloaderBUTT.attr("clue_url");
+														if (clue_url in rdb_spider.clues_by_url)
+														{	//@@TODO: should call spider member function
+															clue = rdb_spider.clues_by_url[clue_url];
+															
+														}
+														console.log("sR1340:", clue_url, clue, $(this));
+														div = getVideoCard(this.n9video, clue);
 														var rdbyts = $(".rdbYtSummary");
 			
 														rdbInsertVideoCard(rdbyts, div);
@@ -1340,7 +1400,8 @@ case "comment_bearing":
 											   } );
 					});
 				newel.append(myloader);
-				myloader.data("clue",clue);
+				myloader.attr("clue_url",clue.URL);
+				console.log("sR1344:", clue.URL, myloader.attr("clue_url"));
 			}
 			return newel;
 		} // end of get placeholder

@@ -2258,6 +2258,7 @@ N9YTSpiderLib.prototype = {
     },
     checkTextForClues: function (content, extrainfo)
     {
+    	var genericVideoLinkTypes = rdbGenericVideoLinkTypes;
     	var timestamp = extrainfo.timestamp ? extrainfo.timestamp: null;
     	var source = extrainfo.source ? extrainfo.source: "unknown.checkTextForClues";
     	if (!extrainfo.source)
@@ -2265,13 +2266,15 @@ N9YTSpiderLib.prototype = {
     		console.log("spid2127:", extrainfo);
     		console.trace();
     	}
+    	
+    	console.log("sR2269: checkingTextForClues", extrainfo);
     	var author = extrainfo.author ? extrainfo.author: null;
     	var author_pretty = extrainfo.author_pretty ? extrainfo.author_pretty: null;
     	var clueCallback = extrainfo.callback ? extrainfo.callback: null; 
     	var estimated_timestamp = extrainfo.estimated_timestamp ? extrainfo.estimated_timestamp: null;
     	
     	
-    	
+    	console.log("spid2276:", genericVideoLinkTypes);
     	//c/onsole.log("spid2077: checkTextForClues", estimated_timestamp, extrainfo);
     	for (genlinktypename in genericVideoLinkTypes)
 		{
@@ -2291,7 +2294,7 @@ N9YTSpiderLib.prototype = {
 			
 			var hasclue = regex.exec(content);
 			
-			
+			//c/onsole.log("spid2296: hasclue", regex, hasclue);
 			
 			if (hasclue)
 			{
