@@ -51,7 +51,7 @@ var _sR_checkOpts = {
 
 	callback: function (clue){
 		var iconURL = chrome.extension.getURL("icon48.png"); // @@CHROME @@SPECIFIC
-		console.log("sR54:", iconURL);
+		//c/onsole.log("sR54:", iconURL);
 		if (!this.count)
 		{
 			this.count = 1;
@@ -60,7 +60,7 @@ var _sR_checkOpts = {
 		{
 			this.count++;
 		}
-		console.log("sR262: clue callbacks from check comments %%%%%%%%%%%%%%", this.count,clue, this);
+		//c/onsole.log("sR262: clue callbacks from check comments %%%%%%%%%%%%%%", this.count,clue, this);
 		
 		var elID = url2id(clue.URL+clue.author, "rdb_clue_link");
 		var url = clue.URL;
@@ -93,7 +93,8 @@ var _sR_checkOpts = {
 								src: iconURL,
 								css: { display: "inline-block",
 										 //float: "left",
-										height: "16px"
+										height: "16px",
+										verticalAlign:"middle"
 									 }
 							});
 				
@@ -102,7 +103,7 @@ var _sR_checkOpts = {
 				var newlink = $("<a>",
 							{
 								href:url,
-								html: " <span style='font-size:70%'> [RDB Generated] </span> ",
+								html: " <span style='font-size:70%'> [go to link] </span> ",
 								css: {	color:"blue"
 									 }
 							})
@@ -151,10 +152,10 @@ function convert2linksNEW()
 	}
 	for (var n = 0; n<comments.length; n++)
 	{
-		console.log("sR105: comment", n, "of", comments.length);
+		//c/onsole.log("sR105: comment", n, "of", comments.length);
 		var comment = $(comments[n]);
 		var text = comment.text();
-		console.log("sR107: text: ",text);
+		//c/onsole.log("sR107: text: ",text);
 		_sR_checkOpts.commentEL = comment;
 	
 		var uname = $(comment.parent().find("p.metadata > .author > .yt-user-name")[0]);
@@ -383,7 +384,8 @@ case "comment_bearing":
 								height: "48px"
 							
 							 },
-						"class":"summary_element"
+						"class":"summary_element",
+						"id":"RDB_main_summary_element"
 					});
 					// ACTUALLY SUMMARY EL!!!!!
 				
@@ -400,7 +402,7 @@ case "comment_bearing":
 						);
 
 	var rstitle = $("<div>",
-						{	text: "ResponseDB Summary ",
+						{	text: "ResponseDB Summary",
 							css: {	fontSize: "20px",
 									verticalAlign: "middle",
 									//"margin-left" :"15px",
@@ -455,7 +457,7 @@ case "comment_bearing":
 	var powerbutts = $("<div>",
 						{	css: {	float:"right",
 									paddingTop:"12px",
-									paddingLeft:"10px",
+									paddingLeft:"3px",
 								 },
 								
 						}
@@ -1319,7 +1321,7 @@ case "comment_bearing":
 		function getPlaceholderCard(clue)
 		{
 			var video_id = clue.videoID;
-			console.log("sR1250: clue =", clue);
+			//c/onsole.log("sR1250: clue =", clue);
 			  var newel = $("<div>",
                     {   css: {  
                                 border:"solid black 1px",
@@ -1786,9 +1788,21 @@ case "comment_bearing":
 
 	// on body ready: insert the summary div soemwhere
 	$("body").ready( function ()
-	{
-		InsertSummaryIntoDocument();
-	}	);
+			{
+				InsertSummaryIntoDocument();
+		
+				setTimeout( function ()
+					{
+						var ytsumm = $(".rdbYtSummary");
+						var mse = $("#RDB_main_summary_element");
+						var msewidth = mse.width();
+						var ytdivwidth = msewidth-120;
+						ytsumm.width(ytdivwidth);
+						
+						console.log("sR1796: width", msewidth, ytdivwidth);
+					}, 2500);
+			}
+		);
 
 break;
 

@@ -1441,7 +1441,7 @@ rdbGenericVideoLinkTypes = {
 						},
 				mkClue: function (groups)
 						{
-							console.log("spid1317:", groupsToDict(this, groups));
+							//c/onsole.log("spid1317:", groupsToDict(this, groups));
 							var clue = $.extend(true, {}, this);
 							clue.videoID = this.mkID(groups);
 							clue.URL = this.mkURL(groups);
@@ -2267,14 +2267,14 @@ N9YTSpiderLib.prototype = {
     		console.trace();
     	}
     	
-    	console.log("sR2269: checkingTextForClues", extrainfo);
+    	//c/onsole.log("sR2269: checkingTextForClues", extrainfo);
     	var author = extrainfo.author ? extrainfo.author: null;
     	var author_pretty = extrainfo.author_pretty ? extrainfo.author_pretty: null;
     	var clueCallback = extrainfo.callback ? extrainfo.callback: null; 
     	var estimated_timestamp = extrainfo.estimated_timestamp ? extrainfo.estimated_timestamp: null;
     	
     	
-    	console.log("spid2276:", genericVideoLinkTypes);
+    	//c/onsole.log("spid2276:", genericVideoLinkTypes);
     	//c/onsole.log("spid2077: checkTextForClues", estimated_timestamp, extrainfo);
     	for (genlinktypename in genericVideoLinkTypes)
 		{
@@ -2299,7 +2299,7 @@ N9YTSpiderLib.prototype = {
 			if (hasclue)
 			{
 				var matches = content.match(regex);
-				console.log("spid2155:",  matches, content);
+				//c/onsole.log("spid2155:",  matches, content);
 				try 
 				{
 				// @@DEBUG

@@ -22,9 +22,15 @@ _njn.listen(
 	{ callback: 
 			function (rq, sender, sendResponse)
 			{
-				listen_count++;
+				//var a = window.open();
+				//a.document.body.innerHTML = "HELLO THERE";
+
 				
 				var cmd = rq.cmd;
+				var response = {ack:true,
+								changed:false
+							   };
+				
 				if (last_state != rq.cmd)
 				{
 					switch(cmd)
@@ -36,21 +42,24 @@ _njn.listen(
 							chrome.browserAction.setBadgeText({text:""});
 							break;
 					}
-					sendResponse({ack: true,
-									changed: true
-								 });
-				}				
-				else
-				{
-					sendResponse({  ack: true,
-								changed: false
-								 });
+					response.changed = true;
 				}
+							
+				switch(cmd)
+				{
+					case "open_home":
+						window.open("cge.html");
+				}
+				sendResponse({  ack: true,
+								changed: false
+							 });
+				
 			}
 	});
 	
 
-
+//var a = window.open();
+//a.document.body.innerHTML = "HELLO THERE";
 
 
 

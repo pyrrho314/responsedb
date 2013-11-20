@@ -1967,14 +1967,12 @@ function Novem() {
     // COMMUNICATIONS BETWEEN CONTENT/EXTENSION
     this.send =  function (message, options)
     {
-    	return;
     	var callback = options.callback;
     	
     	chrome.runtime.sendMessage( message, callback);
     },
     this.listen = function (options)
     {
-    	return;
     	var callback = options.callback;
     	if (callback)
     	{

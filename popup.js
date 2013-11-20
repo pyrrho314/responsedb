@@ -69,8 +69,12 @@ var heading = document.getElementById("app_name");
 heading.innerHTML = manifest.name+ "<span class='ytcl_notice'>&nbsp;&nbsp;"+manifest.version+"</span>";
 
 }
-
-
-
-
-
+function cgeWindow()
+{
+	_njn.send({cmd:"this_command"}, { complete: function (msg) 
+										{
+											console.log("pop76:", msg);
+										}
+									 }
+}
+					
