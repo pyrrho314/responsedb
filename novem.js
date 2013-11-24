@@ -1967,16 +1967,16 @@ function Novem() {
     // COMMUNICATIONS BETWEEN CONTENT/EXTENSION
     this.send =  function (message, options)
     {
-    	var callback = options.callback;
+    	var complete = options.complete;
     	
-    	chrome.runtime.sendMessage( message, callback);
+    	chrome.runtime.sendMessage( message, complete);
     },
     this.listen = function (options)
     {
     	var callback = options.callback;
     	if (callback)
     	{
-    		console.log("n1979: _njn.listen ", options);
+    		console.log("n1979: _njn.listen ", options, callback);
     		chrome.runtime.onMessage.addListener(callback);
     	}
     }

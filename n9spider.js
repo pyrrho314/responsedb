@@ -1,3 +1,9 @@
+// DEBUG FLAGS
+// Clue Tracker
+TRACKER_PHRASE = "update here"; // false
+
+
+
 function n9spider_yt_userscan(username, map, create_domicile)
 {
     var enclosed_username = username;
@@ -129,6 +135,15 @@ function n9spider_idb_videoscan(videoID, options)
 											var content = comment.get("content");
 										
 											rdb_spider.checkCommentForClues(comment);
+											var author = comment.get("author");
+											var author_pretty = comment.get("author_pretty");
+											/*
+											console.log("spid133: author", author_pretty, author);
+											if (author == "nitelite78" || author_pretty == "nitelite78")
+											{
+												console.log("spid136:", comment.get("content"), comment);
+											}
+											*/
 										},
 										complete: function ()
 										{
@@ -157,7 +172,7 @@ function n9spider_idb_videoscan(videoID, options)
 		options);
 }
 
-
+    	
 function n9spider_yt_videoscan(video_id, complete_func, options)
 {
 	// @@NOTE: this function has weird option names ... videoID and n9complete
@@ -227,7 +242,8 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
                     console.log("spid126:", get_comments, this);
                     if (get_comments)
                     {
-                    	console.log("spid129:", vid);
+                    	console.log("spid245: video yt getting comments", vid);
+                    	console.log("spid246: this", this);
                     	var commentfeedurl = vid.get("comments_feed")+"?alt=json";
                     	n9spider_yt_recurseComments(
                     		{	username: username,
@@ -832,9 +848,19 @@ function n9spider_yt_video_div(args)
     dateparts = dateparts.splice(0,5);
     datestr = dateparts.join(" ");
     
+    
+    // video ID element
+    newel.append($("<span>",
+						{text:video_id,
+					    	css:{ fontSize:"60%"
+					    		}
+					    }
+				  )
+				);
+	// datestring element
     newel.append ($("<div>",
                     {
-                        css:{fontSize:"60%",
+                        css:{fontSize:"90%",
                              rightMargin:"10px"},
                         html: datestr
                     })
@@ -849,6 +875,7 @@ function n9spider_yt_video_div(args)
 			css: {paddingLeft:"5px"}
 		})
 		);
+	
 
     newel.append( thumbel );
     newel.append ($("<span>", 
@@ -1773,8 +1800,11 @@ N9YTSpiderLib.prototype = {
     	//console.log("spid1526: addclue, clue followed by trace", clue);
     	//console.trace();
     	
+    	var tracker = false;
+    	tracker = clue.content.indexOf(TRACKER_PHRASE) >= 0;
     	
     	
+    	console.log("spid1795: ", clue.URL in this.clues_by_url);
     	if (clue.URL in this.clues_by_url)
     	{
     		var stored_clue = this.clues_by_url[clue.URL];
@@ -1832,10 +1862,14 @@ N9YTSpiderLib.prototype = {
     	
     	this.clues_by_url[clue.URL] = clue;
     	this.clues[this.clues.length] = clue;
-    	if (clue.content.indexOf("clue") >= 0)
+    	if (tracker)
     	{
-    		console.log("spid1668: addClue");
+    		console.log("spid1668: (tracker) addClue");
     		console.trace();
+    	}
+    	if (tracker)
+    	{
+    		console.log("spid1862: about to send clue_new (tracker)", clue);
     	}
     	_njn.execute("clue_new", clue);
     	_njn.execute("spider_event",
@@ -2258,6 +2292,12 @@ N9YTSpiderLib.prototype = {
     },
     checkTextForClues: function (content, extrainfo)
     {
+    	var tracker = false;
+    	if (content.indexOf("update here:") >=0)
+    	{
+    		tracker = true;
+    		console.log("spid2281:", content, extrainfo);
+    	}
     	var genericVideoLinkTypes = rdbGenericVideoLinkTypes;
     	var timestamp = extrainfo.timestamp ? extrainfo.timestamp: null;
     	var source = extrainfo.source ? extrainfo.source: "unknown.checkTextForClues";
@@ -2298,8 +2338,16 @@ N9YTSpiderLib.prototype = {
 			
 			if (hasclue)
 			{
+				if (tracker)
+				{
+					console.log("spid2327: hasclue", hasclue);
+				}
 				var matches = content.match(regex);
-				//c/onsole.log("spid2155:",  matches, content);
+				if (tracker)
+				{
+					console.log("spid2155: tracker:",  matches, content);
+				}
+				
 				try 
 				{
 				// @@DEBUG
@@ -2307,11 +2355,15 @@ N9YTSpiderLib.prototype = {
 					{
 						for (var j=0; j<matches.length; j++)
 						{
-							if (matches.length>1)
-							{	console.log("spid2166 matches",j,":", matches[j])
+							if (tracker)
+							{	console.log("spid2166 (tracker) matches",j,":", matches[j])
 							}
 							var groups = regex.exec(matches[j]);
-							// console.log("sR183:", comment.match(patt));
+							if (tracker)
+							{
+								console.log("sR2348: (tracker)", groups);
+							}
+							
 							if (groups) 
 							{
 								// rdb_spider should be this!
@@ -2330,6 +2382,11 @@ N9YTSpiderLib.prototype = {
 													' . id is "'+clue.videoID+'"',
 													 clue);
 								*/
+								
+								if (tracker)
+								{
+									console.log("spid2372: (tracker)", validid, clue);
+								}
 								if (validid)
 								{
 									//c onsole.log("spid1944:adding CLUE ", regex, content);

@@ -116,7 +116,7 @@ function _mrsl_report(morsel, morsel_def, target_select)
                 var enc_video_id;
                 if (name == "submap_name")
                 {
-                    enclosed_value = "/n9/maps?map_name="+value;
+	                enclosed_value = "/n9/maps?map_name="+value;
                 }
                 if (name == "url")
                 {

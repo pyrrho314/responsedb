@@ -137,6 +137,7 @@ var _sR_checkOpts = {
 
 function convert2linksNEW()
 {	
+	return;
 	// get comments from the page itself
 	var comments = $(".Ct"); //@@DOCO: class used to get comments was comment-text
 	//c/onsole.log("sR323: ",comments.length, "comments in page");
@@ -402,13 +403,13 @@ case "comment_bearing":
 						);
 
 	var rstitle = $("<div>",
-						{	text: "ResponseDB Summary",
+						{	html: "ResponseDB<br/>Summary",
 							css: {	fontSize: "20px",
 									verticalAlign: "middle",
 									//"margin-left" :"15px",
 									//"margin-right":"15px",
 									"padding-left":"53px",
-									"margin-top":"15px",
+									"margin-top":"2px",
 									//display: "table-cell",
 									height: "auto",
 									width:"100%"
@@ -431,7 +432,7 @@ case "comment_bearing":
 							class:  "showhideButton",
 							id: 	"showhideSummaryButton",
 							value: 	"",
-							css: {	"margin-right":"58px",
+							css: {	"margin-right":"28px",
 									"margin-top":"14px",
 									float:"right",
 									width:"10em"
@@ -459,6 +460,7 @@ case "comment_bearing":
 									paddingTop:"12px",
 									paddingLeft:"3px",
 								 },
+							id:"rdb_powerbutts"
 								
 						}
 					   );
@@ -505,11 +507,17 @@ case "comment_bearing":
 					videoID: vid,
 					complete: function (event)
 						{
-							console.log("sR148: completed youtube video scan");
+							console.log("sR510: completed youtube video scan");
 						},
 					foreach: function (comment) // @@WONDER: should this be called foreach_comment
 						{
-							console.log("sR177 comments from videoscan youtube!:", this);
+							console.log("sR513 comments from videoscan youtube!:", this);
+							var content = comment.get("content");
+							var tracker = content.indexOf(TRACKER_PHRASE) >= 0;
+    						if (tracker)
+    						{
+    							console.log("sR517:",comment);
+    						}
 							rdb_spider.checkCommentForClues(comment);
 						},
 					get_comments:true
@@ -1256,7 +1264,12 @@ case "comment_bearing":
 	
 	function rdbProcessClue(cmd, clue)
 	{
-		console.log("sR445:rdbProcessClue", cmd, clue);
+		console.log("sR1260: process clue", TRACKER_PHRASE, clue);
+		var tracker = clue.content.indexOf(TRACKER_PHRASE) >= 0;
+		if (tracker)
+		{
+			console.log("1263: (tracker) rdbProcessClue", cmd, clue);
+		}
 		var tehdiv = rdb_clue_div(clue);
 		var pclueEL = $("#"+clue2id(clue)); //@@NAMECON
 	
@@ -1481,107 +1494,18 @@ case "comment_bearing":
 		}
 	 }
 	
-	function rdbProcessClueOLD(cmd, clue)
-	{
-		console.log("sR445:rdbProcessClue", cmd, clue);
-		//if (false)
-		if (false) // if (cmd == "clue_update")
-		{
-			var previousdiv = $("."+url2id(clue.URL, "cluediv")); //@@NAMECON local convention in sR
-			//console.log("sr1050: removing old clue div", previousdiv);
-			for (var n = 0; n<previousdiv.length; n++)
-			{
-				var pdiv = $(previousdiv[n]);
-				var pdivdata = pdiv.data("clue");
-				console.log("sR1055: pdiv data", pdivdata);
-			
-				if (pdivdata === clue)
-				{
-					console.log("pdivdata === clue");
-					//div.remove();
-				}
-				if (pdivdata.content == clue.content)
-				{
-					console.log("content === content");
-					pdiv.stop(true);
-					pdiv.slideUp(function () { this.remove();})
-				}
-			}
-		}
-	
-		var tehdiv = rdb_clue_div(clue);
-		var clueEL = $("#"+clue2id(clue)); //@@NAMECON
-		
-		if (false) // @@DEBUG: COMOUT: (clueEL.length)
-		{
-			//clueEL.css("border-color", "red");
-			//clueEL.css("background-color","lightYellow");
-			//clueEL.hide();
-			//c/onsole.log("sR695:", clue);
-			//return;
-			var rdboths = rdb_summary_div.find(".rdbOtherSummary");
-		
-			var tehdiv = rdb_clue_div(clue);
-			//c onsole.log("sR483:", cmd, clue);
-			rdbInsertClueSorted(rdboths, tehdiv);	
-			var clueset = $("."+url2id(clue.videoID, "clue"));
-			clueset.detach();
-			var newclue = $(clueset[0]);
-			var duplclue = $("<div>",
-							{	css:{
-										margin:"5px",
-										marginLeft:"30px"
-									}
-							});
-			var subset = clueset.slice(1);
-			subset.css({"border": "none",
-						"border-left":"solid black 1px"
-						});
-			subset.find(".clue_link, .clue_link_label").remove();
-			duplclue.append(subset);
-			newclue.append(duplclue);
-		
-			tehdiv = newclue;
-		}
-		
-		if (false) //@@DEBUG @@COMMOUT:(clue.protocol == "youtube2013")
-		{
-		
-			var rdboths = $(".rdbOtherSummary");
-			var rdbyts = $(".rdbYtSummary");
-			var n9vid = rdb_spider.videos_by_id[clue.videoID];
-			console.log("sR448:", clue.videoID, n9vid);
-			if (n9vid)
-			{
-				div = getVideoCard(n9vid, clue);
-				rdbyts.append(div);
-			}
-		}
-		else
-		{
-			var source = clue.source ? clue.source : "default";
-			if (source == "default")
-			{
-			
-			}
-			else if (source == "content_scan")
-			{
-				tehdiv.css("background-color","#e0f0e0");
-			}
-			else if (source.indexOf("idb.") >= 0)
-			{
-				tehdiv.css("background-color","#e0e0ff");
-			}
-		
-			var rdboths = rdb_summary_div.find(".rdbOtherSummary");
-			console.log("sR1120:", source);
-			//c onsole.log("sR483:", cmd, clue);
-			rdbInsertClueSorted(rdboths, tehdiv);	
-			//rdboths.append(tehdiv);
-		}
-	 }
 	_njn.register("clue_new", 
-					function (clue) { rdbProcessClue("new_clue", clue);}
+					function (clue) { 
+					
+						console.log("sr1491: clue_new:", clue);
+						console.log("sr1494: TRACKER_PHRASE", TRACKER_PHRASE);
+						var tracker = clue.content.indexOf(TRACKER_PHRASE) >= 0;
+						if (tracker)
+						{
+							console.log("1497: (tracker) clue_new",  clue);
+						}
+						rdbProcessClue("clue_new", clue);
+						}
 				 );
 	_njn.register("clue_update", 
 					function (clue) { rdbProcessClue("clue_update",clue);}
@@ -1793,13 +1717,16 @@ case "comment_bearing":
 		
 				setTimeout( function ()
 					{
+						
 						var ytsumm = $(".rdbYtSummary");
+						var pbutts = $("#rdb_powerbutts");
 						var mse = $("#RDB_main_summary_element");
-						var msewidth = mse.width();
-						var ytdivwidth = msewidth-120;
+						var msewidth   = mse.width();
+						var pbuttwidth = pbutts.width();
+						var ytdivwidth = msewidth-pbuttwidth;
 						ytsumm.width(ytdivwidth);
 						
-						console.log("sR1796: width", msewidth, ytdivwidth);
+						console.log("sR1796: width", msewidth, "-", pbuttwidth, "=", ytdivwidth);
 					}, 2500);
 			}
 		);

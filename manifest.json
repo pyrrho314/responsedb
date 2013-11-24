@@ -1,6 +1,10 @@
 {
 	 "background": {
-      "scripts": [ "jquery.js", "novem.js", "background.js" ]
+      "scripts": [ "jquery.js", 
+      				"novem.js", 
+      				"morsels.js",
+      				"n9spider.js",
+      				"background.js" ]
    },
    "browser_action": {
       "default_icon": "icon.png",

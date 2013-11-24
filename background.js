@@ -24,7 +24,7 @@ _njn.listen(
 			{
 				//var a = window.open();
 				//a.document.body.innerHTML = "HELLO THERE";
-
+				console.log("back27: heard something!", rq)
 				
 				var cmd = rq.cmd;
 				var response = {ack:true,
