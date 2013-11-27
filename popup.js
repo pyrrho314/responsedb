@@ -29,5 +29,4 @@ function cgeWindow()
 			);
 }
 					
-$("#popup_notify").append($("<span>", {text:"TEST TEST"}));
 $("#open_home_butt").click(cgeWindow);

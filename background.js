@@ -48,7 +48,11 @@ _njn.listen(
 				switch(cmd)
 				{
 					case "open_home":
-						window.open("cge.html");
+					//@@CHROME @@SPECIFIC
+					// this also worked... window.open("cge.html");
+					chrome.tabs.create(
+						{"url": "cge.html"}
+						);
 				}
 				sendResponse({  ack: true,
 								changed: false
