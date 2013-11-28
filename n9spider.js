@@ -1743,7 +1743,7 @@ function N9YTSpiderLib (){
     };
 N9YTSpiderLib.prototype = {
     map : null,
-
+    db_mode: "self_reliant",
     users:null,
     users_by_id: null,
     
@@ -2257,22 +2257,35 @@ N9YTSpiderLib.prototype = {
     },
     saveElement: function (element_type, record)
     {
-        var transaction = this.db.transaction([element_type], "readwrite");
-        
-        transaction.oncomplete = function (event) {
-            //c/onsole.log("spid823: oncomplete");
-        };
-        transaction.onerror = function (event){
-            console.log("spid826: onerror");
-            console.log(event);
-            // handle erros my brahman
-        };
-        
-        var objectStore = transaction.objectStore(element_type);
-        var request = objectStore.put(record);
-        request.onsuccess = function(event){
-            // success!
-        }
+    	console.log("spid2260: save element", element_type, this.db_mode);
+    	
+    	switch(this.db_mode)
+    	{
+    		case "send_to_background":
+    			_njn.send( {cmd: "save_element", 
+    						record: record
+    						});
+    			break;
+    			
+    		case "self_reliant":
+    		default:
+				var transaction = this.db.transaction([element_type], "readwrite");
+		
+				transaction.oncomplete = function (event) {
+					//c/onsole.log("spid823: oncomplete");
+				};
+				transaction.onerror = function (event){
+					console.log("spid826: onerror");
+					console.log(event);
+					// handle erros my brahman
+				};
+		
+				var objectStore = transaction.objectStore(element_type);
+				var request = objectStore.put(record);
+				request.onsuccess = function(event){
+					// success!
+				}
+		}
     },
     clearDB: function ()
     {

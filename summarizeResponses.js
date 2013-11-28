@@ -619,6 +619,8 @@ case "comment_bearing":
 
 	insertEL.append(spiderActivityEL);
 	insertEL.append( showhide);
+	console.log("sR622: showhideOpened", showhideOpened, localStorage["rdb_showhide_state"]);
+	
 	showhide.data("opened", showhideOpened);
 
 	insertEL.append( rstitle );
@@ -651,8 +653,10 @@ case "comment_bearing":
 	function mkShowHideRight ()
 	{
 		var opened = $(this).data("opened");
-		//c/onsole.log("sR163:showhideright", opened);
-		//c/onsole.trace();
+		
+		console.log("sR163:showhideright", opened);
+		console.trace();
+		
 		var rdbs = $(".rdbSummary");
 		if (opened)
 		{
