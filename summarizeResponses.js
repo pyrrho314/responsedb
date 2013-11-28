@@ -654,7 +654,7 @@ case "comment_bearing":
 	{
 		var opened = $(this).data("opened");
 		
-		console.log("sR163:showhideright", opened);
+		console.log("sR657:showhideright", opened);
 		console.trace();
 		
 		var rdbs = $(".rdbSummary");
@@ -688,8 +688,12 @@ case "comment_bearing":
 		}
 		else
 		{
+			console.log("sR691: slideup");
+			
+			
 			rdbs.slideUp(400, function ()
 			{
+				console.log("sr695: slideup done");
 				$(".summary_element").height("48px");
 		
 			});
