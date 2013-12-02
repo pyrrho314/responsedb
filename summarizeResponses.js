@@ -1,5 +1,11 @@
 console.log("sr1: summarizeResponses.js extension acting on", window.location.href);
 
+/// CONFIGURE SPIDER!!!!
+///
+rdb_spider.db_mode = "send_to_background";
+
+////////////////////////
+
 
 //////////////////////
 /// UTILITY FUNCTIONS
@@ -420,7 +426,7 @@ case "comment_bearing":
 	var showhideLocalState = null;
 	if ("rdb_showhide_state" in localStorage)
 	{
-		showhideLocalState = localStorage["rdb_showhide_state"];
+		showhideLocalState = JSON.parse(localStorage["rdb_showhide_state"]);
 	}
 	else
 	{
@@ -654,12 +660,13 @@ case "comment_bearing":
 	{
 		var opened = $(this).data("opened");
 		
-		console.log("sR657:showhideright", opened);
-		console.trace();
+		console.log("sR657:showhideright opened is", opened,
+						typeof(opened));
 		
 		var rdbs = $(".rdbSummary");
 		if (opened)
 		{
+			console.log("sR663: opened");
 			/*var clues = rdb_spider.clueList();
 			var rdbs    = rdb_summary_div.find(".rdbSummary");
 			var rdboths = rdb_summary_div.find(".rdbOtherSummary");

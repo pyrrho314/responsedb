@@ -1967,8 +1967,17 @@ function Novem() {
     // COMMUNICATIONS BETWEEN CONTENT/EXTENSION
     this.send =  function (message, options)
     {
-    	var complete = options.complete;
     	
+    	var complete = null;
+    	
+    	if (options && options.complete) 
+    	{
+    		complete = options.complete;
+    	}
+    	else
+    	{
+    		complete = function (any){ console.log("nj1979: send complete", any)}
+    	}
     	chrome.runtime.sendMessage( message, complete);
     },
     this.listen = function (options)

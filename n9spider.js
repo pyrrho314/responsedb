@@ -1880,10 +1880,7 @@ N9YTSpiderLib.prototype = {
     	//console.log("spid1157:", this.clues_by_url);
     	return clue
     },
-    clueList: function ()
-    {
-    	return this.clues;
-    },
+    
     addComment: function (commentprops, mem_only)
         {
             var map = this._getMap();
@@ -2004,6 +2001,25 @@ N9YTSpiderLib.prototype = {
             return video;
             //this.video[video.video_id] = video
         },
+    clueList: function ()
+    {
+    	return this.clues;
+    },
+  	executeAlternateMode: function (func_name, query, options)
+  	{
+  		// @@there
+  		console.log("spider2011:", func_name, query, options);
+  		switch(this.db_mode)
+  		{
+  			case "send_to_background":
+  				console.log("spid2014:");
+  				return true;
+  				break;
+  			case "self_reliant":
+  			default:
+  				return false;
+  		}
+  	},
     updateUser: function (vidprops, mem_only)
         {
             var morsel;
@@ -2255,6 +2271,12 @@ N9YTSpiderLib.prototype = {
                 }
               );
     },
+    dbCurseElements: function (element_type, query, options)
+    {
+    	// actually, what's a general strategy, the object oriented queries are
+    	// due to knowledge about the indexes involved etc... so.
+    	
+    },
     saveElement: function (element_type, record)
     {
     	console.log("spid2260: save element", element_type, this.db_mode);
@@ -2262,7 +2284,8 @@ N9YTSpiderLib.prototype = {
     	switch(this.db_mode)
     	{
     		case "send_to_background":
-    			_njn.send( {cmd: "save_element", 
+    			_njn.send( {cmd: "element_save",
+    						element_type: element_type,
     						record: record
     						});
     			break;
@@ -2460,8 +2483,16 @@ N9YTSpiderLib.prototype = {
     						   );
 	},
 	// @@DEPRECATED
+    // @@DEPRECATED
+    // @@DEPRECATED
+    // @@DEPRECATED
     dbCurseComments: function (query, callback) // deprecated see rdb version
     {
+    // @@DEPRECATED
+    // @@DEPRECATED
+    // @@DEPRECATED
+    // @@DEPRECATED
+    	
         var cbtype = typeof(callback);
         var options = null;
         
@@ -2522,6 +2553,20 @@ N9YTSpiderLib.prototype = {
     // be ported to this cleaner version 
     rdbCurseComments: function (query, options)
     {
+    	console.log("spid2555: rdbCurseComments");
+    	var eventhandled = 
+    		this.executeAlternateMode("dbCurseComments", 
+    									query, 
+    									{
+    										"foreach":callback
+    									}
+    		);
+    	if (eventhandled)
+    	{	//alternate mode returns true means... deferred
+    		console.log("spid2565: rdbCurseComments");
+    	
+    		return;		
+    	}
         //c onsole.log("spider: dbcurse comments");
         var spider  = rdb_spider;
         
@@ -2605,6 +2650,26 @@ N9YTSpiderLib.prototype = {
     },
     dbGetVideo: function (videoID, callback, options)
     {
+    	// // // // // // // // // //
+    	// alternate mode header
+    	console.log("spid2655:", video, callback, options);
+    	var eventhandled = 
+    		this.executeAlternateMode("dbGetVideo", 
+    									{
+    										video_id: videoID,
+    										complete: callback,
+    										options: options,
+										}
+    		);
+    	if (eventhandled)
+    	{	//alternate mode returns true means... deferred
+    		console.log("spid2565: rdbCurseComments");
+    	
+    		return;		
+    	}
+    	//  // // // // // // // // //
+    	// // // // // // // // // // 
+    	
     	var enclosed_callback = callback;
     	var enclosed_spider = this;
     	var transaction = this.db.transaction(["videos"]);
