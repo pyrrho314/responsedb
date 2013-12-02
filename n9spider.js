@@ -2008,11 +2008,17 @@ N9YTSpiderLib.prototype = {
   	executeAlternateMode: function (func_name, query, options)
   	{
   		// @@there
-  		console.log("spider2011:", func_name, query, options);
+  		console.log("spider2011: func_name", func_name, query, options);
   		switch(this.db_mode)
   		{
   			case "send_to_background":
-  				console.log("spid2014:");
+  				console.log("spid2014: send_to_background", func_name, query, options);
+  				_njn.send({cmd:"element_curse",
+  							func_name: func_name,
+  							query: query,
+  						  },
+  						  	options
+  						  );
   				return true;
   				break;
   			case "self_reliant":
@@ -2652,7 +2658,7 @@ N9YTSpiderLib.prototype = {
     {
     	// // // // // // // // // //
     	// alternate mode header
-    	console.log("spid2655:", video, callback, options);
+    	console.log("spid2655:", videoID, options);
     	var eventhandled = 
     		this.executeAlternateMode("dbGetVideo", 
     									{

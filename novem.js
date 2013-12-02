@@ -1969,7 +1969,7 @@ function Novem() {
     {
     	
     	var complete = null;
-    	
+    	console.log("n1972: send",message, options);
     	if (options && options.complete) 
     	{
     		complete = options.complete;
@@ -1985,7 +1985,7 @@ function Novem() {
     	var callback = options.callback;
     	if (callback)
     	{
-    		console.log("n1979: _njn.listen ", options, callback);
+    		console.log("n1988: _njn.listen ", options);
     		chrome.runtime.onMessage.addListener(callback);
     	}
     }

@@ -57,14 +57,29 @@ function spider_event(rq,sender,sendResponse)
 function element_event(rq,sender, sendResponse)
 {
 	console.log("bg59: element_event", rq);
+	console.log("bg60: sender", sender);
 	var cmd = rq.cmd;
+	var answer = {};
+	answer.ack = true;
+	answer.fate = "event_initiated";
+	answer.command = rq.cmd;
+	
 	switch (cmd)
 	{
 		case "element_save":
 			var element_type = rq.element_type;
 			rdb_spider.saveElement(element_type, rq.record);
 			break;
+		case "element_curse":
+			console.log("bg68: background receiving element_curse");
+			break;
+		default:
+			answer.fate = "failed";
+			answer.reason = "command_unknown";
+			return;
 	}	
+	
+	sendResponse( answer );				
 }
 
 _njn.listen(
