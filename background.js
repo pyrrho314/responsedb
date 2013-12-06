@@ -71,7 +71,7 @@ function element_event(rq,sender, sendResponse)
 			rdb_spider.saveElement(element_type, rq.record);
 			break;
 		case "element_curse":
-			console.log("bg68: background receiving element_curse");
+			console.log("bg68: background receiving element_curse", rq, sender);
 			break;
 		default:
 			answer.fate = "failed";

@@ -2654,7 +2654,7 @@ N9YTSpiderLib.prototype = {
             }
         }
     },
-    dbGetVideo: function (videoID, callback, options)
+    4: function (videoID, callback, options)
     {
     	// // // // // // // // // //
     	// alternate mode header
