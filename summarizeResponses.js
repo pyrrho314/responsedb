@@ -7,6 +7,12 @@ rdb_spider.db_mode = "send_to_background";
 ////////////////////////
 
 
+$("body").ready( function ()
+	{
+		_njn.callback_listen();
+	});
+
+
 //////////////////////
 /// UTILITY FUNCTIONS
 ///
@@ -327,8 +333,8 @@ function convert2linksNEW()
 		}
 	}
 
-	// development switch for refactoring convert2liinks
-	convert2links = convert2linksNEW;
+// development switch for refactoring convert2liinks
+convert2links = convert2linksNEW;
 ///
 /// END OF UTILITY FUNCTIONS @@
 ///
@@ -1610,7 +1616,7 @@ case "comment_bearing":
 								//$(this).css(css1);
 							 }
 							});
-				console.log("sR1241:", newmsg);
+				console.log("sR1619:", newmsg);
 			}
 		
 			if (msg == spideridleterm)

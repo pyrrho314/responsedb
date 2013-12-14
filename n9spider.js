@@ -2007,6 +2007,7 @@ N9YTSpiderLib.prototype = {
     },
   	executeAlternateMode: function (func_name, query, options)
   	{
+  		addHistory(options, "executeAlternateMode");
   		// @@there
   		console.log("spider2011: func_name", func_name, query, options);
   		switch(this.db_mode)
@@ -2654,23 +2655,26 @@ N9YTSpiderLib.prototype = {
             }
         }
     },
-    4: function (videoID, callback, options)
+    dbGetVideo: function (videoID, callback, options)
     {
+    	addHistory(options, "dbGetVideo");
     	// // // // // // // // // //
     	// alternate mode header
-    	console.log("spid2655:", videoID, options);
+    	console.log("spid2655:", videoID,
+    							"options=",options);
     	var eventhandled = 
     		this.executeAlternateMode("dbGetVideo", 
     									{
     										video_id: videoID,
-    										complete: callback,
-    										options: options,
-										}
+    									},
+    									options
     		);
+    		
+    	
     	if (eventhandled)
     	{	//alternate mode returns true means... deferred
-    		console.log("spid2565: rdbCurseComments");
-    	
+    		console.log("spid2565: dbGetVideo handled by alternate mode");
+			// call the callback
     		return;		
     	}
     	//  // // // // // // // // //

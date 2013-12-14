@@ -34,6 +34,15 @@ String.prototype.format = function() {
 };
 
 
+function addHistory(options, id)
+{
+	if (!options._history)
+	{
+		options._history = [];
+	}
+	options._history[options._history.length] = id;
+}
+
 function log(msg)
 {
     if (true)
@@ -1963,23 +1972,76 @@ function Novem() {
         //c onsole.log("nj1190:"+_njn.userName());
     });
     */
+    
+    
     ////////
     // COMMUNICATIONS BETWEEN CONTENT/EXTENSION
+    this.callbackIndex = {};
+    this.cb_id = 0;
+    this.add_callback = function(name, func_ptr, cbstore)
+    {
+    	// options is where we will keep a callback proxy...
+    	this.cb_id++;
+    	var id = this.cb_id;
+    	
+    	var cbobj = {name: 	name,
+    				 funcptr :  func_ptr,
+    				 id: 		id,
+    				 };
+    	this.callbackIndex[id] = cbobj;
+    	
+    	if  (cbstore)
+    	{
+    		var _obj = null;
+    		var callbacks = null;
+    		if (!cbstore._obj) { _obj = cbstore._obj = {};}
+    		_obj = cbstore._obj;
+    		if (!_obj.callbacks) { _obj.callbacks = {}; }
+    		callbacks = _obj.callbacks;
+    		callbacks[id] = cbobj;
+    	}
+    	console.log("add_callback", this.callbackIndex);
+    	return id;
+    }
+    
     this.send =  function (message, options)
     {
-    	
+    
+    	for (prop in options)
+    	{
+    		if (typeof(options[prop]) == "function")
+    		{
+    			this.add_callback(prop, options[prop], message);
+    		}
+    	}
+    	var targetID = null;
+    	if (options && options._obj	&& options._obj.targetID)
+    	{
+    		targetID = options._obj.targetID;
+    	}
     	var complete = null;
-    	console.log("n1972: send",message, options);
+    	console.log("n2018: send", targetID, message, options);
     	if (options && options.complete) 
     	{
     		complete = options.complete;
     	}
     	else
     	{
-    		complete = function (any){ console.log("nj1979: send complete", any)}
+    		complete = function (any){ console.log("nj2025: default function for: send complete", any)}
     	}
-    	chrome.runtime.sendMessage( message, complete);
-    },
+    	
+    	if (!targetID)
+    	{
+    		console.log("n2030: sendmessage w/no id");
+    		chrome.runtime.sendMessage( message, complete);
+    	}
+    	else
+    	{
+    		console.log("n2035: sendmessage w/ targetID", targetID);
+    		chrome.runtime.sendMessage( ""+targetID, message, complete);
+    	}
+    }
+    
     this.listen = function (options)
     {
     	var callback = options.callback;
@@ -1989,6 +2051,30 @@ function Novem() {
     		chrome.runtime.onMessage.addListener(callback);
     	}
     }
+    
+    this.callback_dispatch = function (rq, sender, sendResponse)
+    {
+    	console.log("nj2042: callback_dispatch ", rq, sender, sendResponse);
+    	
+    }
+    
+    this.callback_listen = function()
+    {
+    	console.log("nj2062: callback listen"); 
+    	this.listen({ callback: this.callback_dispatch});
+    }
+    
+    this.send_callback_event = function (callback_name, _obj)
+    {
+    	console.log("nj2069: send_callback_event", "'"+callback_name+"'", _obj);
+    	this.send({ cmd: "callback_event",
+    			  	callback_name: callback_name,
+    			  	_obj: _obj
+    			  },
+    			  {
+    			  	_obj: _obj
+    			  }); 
+	}
 }
 
 function Target(target) {

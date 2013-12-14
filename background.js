@@ -72,13 +72,16 @@ function element_event(rq,sender, sendResponse)
 			break;
 		case "element_curse":
 			console.log("bg68: background receiving element_curse", rq, sender);
+			//  this guy has to know what sort of event is being generated...
+			//  that is: lexicon of foreach, complete etc, has to be consistent 
+			//  accross all iDB transactions so this guy can operate generically otherwise
+			rq._obj.targetID = sender.tab.id;
+			_njn.send_callback_event("complete", rq._obj);
 			break;
 		default:
 			answer.fate = "failed";
 			answer.reason = "command_unknown";
-			return;
 	}	
-	
 	sendResponse( answer );				
 }
 
