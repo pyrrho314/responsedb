@@ -2038,7 +2038,7 @@ function Novem() {
     	else
     	{
     		console.log("n2035: sendmessage w/ targetID", targetID);
-    		chrome.runtime.sendMessage( ""+targetID, message, complete);
+    		chrome.tabs.sendMessage( targetID, message, complete);
     	}
     }
     
@@ -2061,7 +2061,9 @@ function Novem() {
     this.callback_listen = function()
     {
     	console.log("nj2062: callback listen"); 
-    	this.listen({ callback: this.callback_dispatch});
+    	this.listen({ 	client: "callback_listen",
+    					callback: this.callback_dispatch
+    				});
     }
     
     this.send_callback_event = function (callback_name, _obj)
