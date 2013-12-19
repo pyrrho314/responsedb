@@ -1976,7 +1976,11 @@ function Novem() {
     
     ////////
     // COMMUNICATIONS BETWEEN CONTENT/EXTENSION
-    this.callbackIndex = {};
+    function CallbackDescription  (initd) {
+    	this.id = initd.id;
+    	this.name= initd.name;
+    }
+    this.callback_register = {};
     this.cb_id = 0;
     this.add_callback = function(name, func_ptr, cbstore)
     {
@@ -1988,36 +1992,36 @@ function Novem() {
     				 funcptr :  func_ptr,
     				 id: 		id,
     				 };
-    	this.callbackIndex[id] = cbobj;
+    	this.callback_register[id] = cbobj;
     	
     	if  (cbstore)
     	{
-    		var _obj = null;
-    		var callbacks = null;
-    		if (!cbstore._obj) { _obj = cbstore._obj = {};}
-    		_obj = cbstore._obj;
-    		if (!_obj.callbacks) { _obj.callbacks = {}; }
-    		callbacks = _obj.callbacks;
+    		var callbacks = cbstore;
     		callbacks[id] = cbobj;
     	}
-    	console.log("add_callback", this.callbackIndex);
-    	return id;
+    	console.log("this.callback_register", this.callback_register);
+    	cbdescription =  new CallbackDescription({name:name, id:id});
+		return cbdescription;    	
     }
     
     this.send =  function (message, options)
     {
-    
+    	var callback_dict = {};
     	for (prop in options)
     	{
     		if (typeof(options[prop]) == "function")
     		{
-    			this.add_callback(prop, options[prop], message);
+    			var cbdesc = this.add_callback(prop, options[prop], this.callback_register);
+    			callback_dict[cbdesc.name] = cbdesc;
     		}
     	}
+    	
     	var targetID = null;
-    	if (options && options._obj	&& options._obj.targetID)
+    	message._client_callback_dict = callback_dict;
+    	console.log("nj2025: send options: (message, options)", message, options);
+    	if (options && options.sender	&& options.sender.tab.id)
     	{
-    		targetID = options._obj.targetID;
+    		targetID = options.sender.tab.id;
     	}
     	var complete = null;
     	console.log("n2018: send", targetID, message, options);
@@ -2030,6 +2034,7 @@ function Novem() {
     		complete = function (any){ console.log("nj2025: default function for: send complete", any)}
     	}
     	
+    	// append system things
     	if (!targetID)
     	{
     		console.log("n2030: sendmessage w/no id");
@@ -2054,28 +2059,28 @@ function Novem() {
     
     this.callback_dispatch = function (rq, sender, sendResponse)
     {
-    	console.log("nj2042: callback_dispatch ", rq, sender, sendResponse);
+    	console.log("nj2062: callback_dispatch ", rq, sender, sendResponse);
+    	console.log("nj2063: callback_register ", _njn.callback_register); //@HARDCODED: _njn (most are unmarked but it's a nice idea, isn't it? or... or... grep _njn?) 
     	
     }
     
     this.callback_listen = function()
     {
-    	console.log("nj2062: callback listen"); 
+    	console.log("nj2068: callback listen"); 
     	this.listen({ 	client: "callback_listen",
     					callback: this.callback_dispatch
     				});
     }
     
-    this.send_callback_event = function (callback_name, _obj)
+    this.send_callback_event = function (callback_name, event, options)
     {
-    	console.log("nj2069: send_callback_event", "'"+callback_name+"'", _obj);
+    	console.log("nj2069: send_callback_event (name,event,options)", "'"+callback_name+"'",event,options);
     	this.send({ cmd: "callback_event",
     			  	callback_name: callback_name,
-    			  	_obj: _obj
+    			  	event: event
     			  },
-    			  {
-    			  	_obj: _obj
-    			  }); 
+    			  options
+    			  ); 
 	}
 }
 
