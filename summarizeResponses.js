@@ -1,17 +1,10 @@
 console.log("sr1: summarizeResponses.js extension acting on", window.location.href);
 
-/// CONFIGURE SPIDER!!!!
+/// CONFIGURE SPIDER!!!! ///
 ///
 rdb_spider.db_mode = "send_to_background";
-
-////////////////////////
-
-
-$("body").ready( function ()
-	{
-		_njn.callback_listen();
-	});
-
+///
+////////////////////////////
 
 //////////////////////
 /// UTILITY FUNCTIONS
@@ -360,6 +353,13 @@ case "comment_iframe":
 case "comment_bearing":
 
 	var MASSIVE_DEBUG = false;
+	////////////////////////
+
+
+	$("body").ready( function ()
+		{
+			_njn.callback_listen();
+		});
 
 	/*
 	chrome.runtime.sendMessage({greeting: "sendenabledsetting"}, function(response) {  
@@ -566,7 +566,7 @@ case "comment_bearing":
 					function (event)
 						{
 							usercursecommentsEL.prop("disabled", false);
-							console.log("sR158: completed idb video retrieval");
+							console.log("sR569: completed idb video retrieval");
 						},
 					get_comments:true	
 					

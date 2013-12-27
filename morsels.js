@@ -365,7 +365,15 @@ N9Morsel.prototype = {
     setMorselVal: function (keyname, value)
     {
         this.createValueLocation(keyname);
-        eval("this.record."+keyname+"=value");
+        // OLDWAY eval("this.record."+keyname+"=value");
+        var keystack = keyname.split(".");
+        var curobj = this.record;
+        for (var i = 0; i<keystack.length - 1;i++)
+        {
+        	var key = keystack[i];
+        	curobj = curobj[key];
+        }
+        curobj[keystack[keystack.length-1]] = value;
     },
     updateRecord: function(valuedict)
     {

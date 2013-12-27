@@ -1981,6 +1981,7 @@ function Novem() {
     	this.name= initd.name;
     }
     this.callback_register = {};
+    this._callback_register = this.callback_register;
     this.cb_id = 0;
     this.add_callback = function(name, func_ptr, cbstore)
     {
@@ -1989,9 +1990,11 @@ function Novem() {
     	var id = this.cb_id;
     	
     	var cbobj = {name: 	name,
-    				 funcptr :  func_ptr,
+    				 func_ptr :  func_ptr,
     				 id: 		id,
     				 };
+    	
+    	console.log("nj1997: ", this.callback_register, this._callback_register);
     	this.callback_register[id] = cbobj;
     	
     	if  (cbstore)
@@ -2031,7 +2034,7 @@ function Novem() {
     	}
     	else
     	{
-    		complete = function (any){ console.log("nj2025: default function for: send complete", any)}
+    		complete = function (any){ console.log("nj2037: default function for: send complete", any)}
     	}
     	
     	// append system things
@@ -2057,11 +2060,51 @@ function Novem() {
     	}
     }
     
-    this.callback_dispatch = function (rq, sender, sendResponse)
+    // the orginal caller will be calling this (attached to listen)
+    // @@WARNING: this has to cooperate with any other message reception
+    // if the caller does any other communication.  I.e. a higher level 
+    // dispatcher that call this one for particular rq commands
+    this.callback_dispatch = function (msg, sender, sendResponse)
     {
-    	console.log("nj2062: callback_dispatch ", rq, sender, sendResponse);
-    	console.log("nj2063: callback_register ", _njn.callback_register); //@HARDCODED: _njn (most are unmarked but it's a nice idea, isn't it? or... or... grep _njn?) 
+    	// used as a callback, thus doesn't actually have this set.
+    	//console.log("nj2062: callback_dispatch rq,sender", rq, sender);
+    	//console.log("nj2063: callback_register ", _njn.callback_register); //@HARDCODED: _njn (most are unmarked but it's a nice idea, isn't it? or... or... grep _njn?) 
     	
+    	var cb_dict = msg.event.rq._client_callback_dict;
+    	var funcname = msg.callback_name;
+    	var cb_register = _njn.callback_register;
+    	
+    	console.log("nj2067: callback_dispatch (msg, cb_dict, cb_register) ",
+    				funcname, msg, cb_dict, cb_register);
+    	
+    	if (funcname in cb_dict)
+    	{
+    		var funcid = cb_dict[funcname].id;
+    		if (funcid)
+    		{
+    			console.log("nj2080:", funcid, cb_register[funcid]);
+    			var func_ptr = cb_register[funcid].func_ptr;
+    			
+    			var eventID =  msg.event.rq.cmd + "." + msg.event.rq.func_name 
+    							+ "." + msg.callback_name;
+    			console.log("nj2089:"+eventID);
+    			switch (eventID)
+    			{
+    				case "element_curse.dbGetVideo.complete":
+    					var video = new N9YTVideo(msg.event.video_record);
+    					var callerobj = { 
+    						videoID: video.get("video_id"),
+    						n9video: video,
+    						complete: func_ptr
+    						}
+    					func_ptr.call(callerobj)
+    					break;
+    			}
+    		}
+    		
+    		
+    	}
+    
     }
     
     this.callback_listen = function()

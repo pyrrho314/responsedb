@@ -76,7 +76,10 @@ function element_event(rq,sender, sendResponse)
 			//  that is: lexicon of foreach, complete etc, has to be consistent 
 			//  accross all iDB transactions so this guy can operate generically otherwise
 			var options = {sender: sender};
-			_njn.send_callback_event("complete", rq, options);
+			rdb_spider.backgroundHandleRequest(rq, options);
+			
+			
+			// _njn.send_callback_event("complete", rq, options);
 			break;
 		default:
 			answer.fate = "failed";

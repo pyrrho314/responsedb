@@ -2,8 +2,6 @@
 // Clue Tracker
 TRACKER_PHRASE = "update here"; // false
 
-
-
 function n9spider_yt_userscan(username, map, create_domicile)
 {
     var enclosed_username = username;
@@ -2001,6 +1999,51 @@ N9YTSpiderLib.prototype = {
             return video;
             //this.video[video.video_id] = video
         },
+    backgroundHandleRequest: function (rq, options)
+    {
+    	var cmd = rq.cmd;
+		var answer = {};
+		answer.ack = true;
+		answer.fate = "event_initiated";
+		answer.command = rq.cmd;
+
+		switch(cmd)
+		{ 
+			case "element_curse":
+				// these functions have to fire back callbacks as if they came from
+				// the local pageprocess from the clients pov, using the novem juristicitonal
+				// node (_njn).
+				console.log("spid2016:", rq, options);
+//				_njn.send_callback_event("complete", rq, options);
+				switch (rq.func_name)
+				{
+					case "dbGetVideo":
+						this.rdbGetVideo(  rq.query,
+										{gv_complete: function (arg)
+											{
+												console.log("spid2024:", this, arg);
+												_njn.send_callback_event("complete", 
+																{
+																rq: rq,
+																video_record:this.n9video.record
+																},
+																options); 
+											}
+										});
+						//_njn.send_callback_event("complete", rq, options);				
+						break;
+				}
+				break;
+			default:
+				break;
+			
+		}
+    }
+    ,
+    backgroundHandleReply: function (rq, options)
+    {
+    }
+    ,
     clueList: function ()
     {
     	return this.clues;
@@ -2655,9 +2698,22 @@ N9YTSpiderLib.prototype = {
             }
         }
     },
+    
     dbGetVideo: function (videoID, callback, options)
+    {	addHistory(options, "dbGetVideo");
+    	
+    	var query = {video_id: videoID};
+    	if (!options) {options = {}}
+    	options.gv_complete = callback;
+    	return this.rdbGetVideo(query, options);
+    },
+    
+    rdbGetVideo: function (query, options)
     {
-    	addHistory(options, "dbGetVideo");
+    	var videoID = query.video_id;
+    	var callback = options.gv_complete; 
+    	addHistory(options, "rdbGetVideo");
+    	
     	// // // // // // // // // //
     	// alternate mode header
     	console.log("spid2655:", videoID,
