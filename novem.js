@@ -1868,7 +1868,7 @@ function Novem() {
                         10,
                         $.extend(true, {}, args));
                 }
-                //retlist[retlist.length] = retval;
+               
             }
         }
         return ;
@@ -2009,6 +2009,11 @@ function Novem() {
     
     this.send =  function (message, options)
     {
+    	if (!options)
+    	{
+    		options = { background: false
+    				  };
+    	}
     	var callback_dict = {};
     	for (prop in options)
     	{
@@ -2022,10 +2027,17 @@ function Novem() {
     	var targetID = null;
     	message._client_callback_dict = callback_dict;
     	console.log("nj2025: send options: (message, options)", message, options);
-    	if (options && options.sender	&& options.sender.tab.id)
+    	if (options)
     	{
-    		targetID = options.sender.tab.id;
-    	}
+    		if (options.target_id)
+    		{
+    			targetID = options.target_id;
+    		}
+			else if (options && options.sender	&& options.sender.tab.id)
+			{
+				targetID = options.sender.tab.id;
+			}
+		}
     	var complete = null;
     	console.log("n2018: send", targetID, message, options);
     	if (options && options.complete) 
@@ -2037,16 +2049,36 @@ function Novem() {
     		complete = function (any){ console.log("nj2037: default function for: send complete", any)}
     	}
     	
-    	// append system things
-    	if (!targetID)
+    	  //////
+    	 // SEND THE MESSAGE(s)
+        //////
+    	if (!targetID && !options.broadcast)
     	{
     		console.log("n2030: sendmessage w/no id");
     		chrome.runtime.sendMessage( message, complete);
     	}
     	else
     	{
-    		console.log("n2035: sendmessage w/ targetID", targetID);
-    		chrome.tabs.sendMessage( targetID, message, complete);
+    		if (chrome.tabs)
+    		{
+				if (options.broadcast ) //@@ CHROME
+				{
+					var tabs = chrome.tabs.query({});
+					options.broadcast = false;
+					for (var n = 0; n<tabs.length; n++)
+					{
+						var tabid = tabs[n].id;
+						options.target_id = tabid;
+						this.send(message, options);
+					}
+					return;
+				}
+				else
+				{
+				console.log("n2035: sendmessage w/ targetID", targetID);
+				chrome.tabs.sendMessage( targetID, message, complete);
+				}
+			}
     	}
     }
     
@@ -2059,6 +2091,19 @@ function Novem() {
     		chrome.runtime.onMessage.addListener(callback);
     	}
     }
+    
+    this.callback_listen = function()
+    { // this is the function called, instead of listen, to support callback listening
+      // @@WARNING:  will have to cooperate with this.listen(..), and doesn't at the moment
+      // THAT IS: if you call this and this.listen... the behavior is undefined. Maybe message
+      // go both places and the response function will be called for one or the other
+      // of the callbacks vs. based on order.      
+    	console.log("nj2068: callback listen"); 
+    	this.listen({ 	client: "callback_listen",
+    					callback: this.callback_dispatch
+    				});
+    }
+    
     
     // the orginal caller will be calling this (attached to listen)
     // @@WARNING: this has to cooperate with any other message reception
@@ -2091,12 +2136,15 @@ function Novem() {
     			switch (eventID)
     			{
     				case "element_curse.dbGetVideo.complete":
-    					var video = new N9YTVideo(msg.event.video_record);
+    					var video_morsel = msg.event.video_record;
+    					console.log("nj2135: CBS", video_morsel);
+    					var video = rdb_spider.addVideo(video_morsel, true); // true == memonly
     					var callerobj = { 
     						videoID: video.get("video_id"),
     						n9video: video,
     						complete: func_ptr
-    						}
+    						};
+    					console.log("nj2142: CBS", callerobj);
     					func_ptr.call(callerobj)
     					break;
     			}
@@ -2107,17 +2155,10 @@ function Novem() {
     
     }
     
-    this.callback_listen = function()
-    {
-    	console.log("nj2068: callback listen"); 
-    	this.listen({ 	client: "callback_listen",
-    					callback: this.callback_dispatch
-    				});
-    }
-    
+   
     this.send_callback_event = function (callback_name, event, options)
     {
-    	console.log("nj2069: send_callback_event (name,event,options)", "'"+callback_name+"'",event,options);
+    	console.log("nj2069: idb_videoscan send_callback_event (name,event,options)", "'"+callback_name+"'",event,options);
     	this.send({ cmd: "callback_event",
     			  	callback_name: callback_name,
     			  	event: event
@@ -2125,6 +2166,7 @@ function Novem() {
     			  options
     			  ); 
 	}
+
 }
 
 function Target(target) {

@@ -26,7 +26,7 @@ function createSourceTag(clue)
 								paddingRight:"3px",
 								margin:"1px"
 							}
-					})
+					});
 	return sourceel;
 }
 
@@ -566,9 +566,13 @@ case "comment_bearing":
 					function (event)
 						{
 							usercursecommentsEL.prop("disabled", false);
-							console.log("sR569: completed idb video retrieval");
+							console.log("sR569: sent idb video request", event);
 						},
-					get_comments:true	
+					get_comments:true,
+					foreach_comment: function (event)
+					 {
+					 	console.log("sr573:", event);
+					 }	
 					
 				}
 			);

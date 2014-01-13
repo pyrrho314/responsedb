@@ -8,13 +8,18 @@ function n9spider_yt_userscan(username, map, create_domicile)
     var enclosed_map = map;
     var enclosed_create_domicile = create_domicile;
     _yt_spiderlib.map = map;
+    
+    
+    var spider = _yt_spiderlib.map;
+    
     console.log("spid3: username="+username+" create_domicile="+create_domicile);
     if (dbg_stopscan)
     { // should change this to non-dbg as am using it for global state
         return;
     }
-    _njn.execute("spider_event",
-                {   event:  "scan_user",
+    
+    spider.broadcastEvent(
+    			{   event:  "scan_user",
                     domain: "yt",
                     username : username
                 });
@@ -30,13 +35,13 @@ function n9spider_yt_userscan(username, map, create_domicile)
             success: function (data) {
                 console.log("userscan return");
                 console.log(data);
-                
+                var spider = _yt_spiderlib;
                 n9spider_yt_feedparse_responses(enclosed_username,
                                                 data.feed,
                                                 enclosed_map,
                                                 Date.now().valueOf(),
                                                 enclosed_create_domicile);
-                _njn.execute("spider_event",
+                spider.broadcastEvent(
                     {   event:  "end_scan_user",
                         domain: "yt",
                         username : enclosed_username
@@ -44,6 +49,8 @@ function n9spider_yt_userscan(username, map, create_domicile)
                 
                 },
             error: function(jqXHR, error, errorThrown) {
+                    var spider = _yt_spiderlib;
+                
                     if (jqXHR.status&&jqXHR.status==403)
                     {   
                         console.log("spid44:", jqXHR,error, errorThrown);
@@ -57,7 +64,7 @@ function n9spider_yt_userscan(username, map, create_domicile)
                             _njn.executeCallback("map_message", 
                                     {"message":"Youtube throttling us down, wait a bit, too many requests."}
                                     );
-                            _njn.execute("spider_event",
+                        	spider.broadcastEvent(
                             {   event:  "end_scan_user",
                                 domain: "yt",
                                 username : enclosed_username
@@ -79,6 +86,7 @@ function n9spider_idb_videoscan(videoID, options)
 {
 	// signature above is original one...
 	// but it can be totally options based, mcay?
+	var lspider = rdb_spider;
 	
 	if (typeof(videoID) == "object")
 	{
@@ -90,20 +98,21 @@ function n9spider_idb_videoscan(videoID, options)
 	{
 		options.videoID = videoID;
 	}
-	console.log("spid83: options to idb_videoscan",options);
+	console.log("spid83: idb_videoscan options to idb_videoscan",options);
 	
 	//c/onsole.trace();
 	// @@DOCO: NOTE, I use call and apply to turn option into this a lot!!!!! warning
 	// I need a consistent paradigm but in general it's to give callback access to the
 	// options relating to them. And it's fun.  Self modifying code song time!
-	
-	_njn.execute("spider_event", 
+	var spider = _yt_spiderlib;
+                
+	lspider.broadcastEvent(
 				{	event:"idb_start_videoscan",
 					video_id: videoID,
 					options: options
 				});
 				
-	rdb_spider.dbGetVideo(
+	lspider.dbGetVideo(
 		videoID, 
 		function ()
 			{	//@@DEV @@TODO: I don't like how I used $extend on the options
@@ -118,7 +127,7 @@ function n9spider_idb_videoscan(videoID, options)
 					if (video)
 					{
 						var videoID = video.get("video_id");
-						console.log("spid84: "+video.get("video_id")+" found in local IDB")
+						console.log("spid84: "+video.get("video_id")+" found in local IDB");
 						rdb_spider.rdbCurseComments
 						(
 							 {
@@ -145,10 +154,11 @@ function n9spider_idb_videoscan(videoID, options)
 										},
 										complete: function ()
 										{
-											console.log("spid135: complete dbGetVideo");
-											_njn.execute("spider_event",
-														{ event: "idb_finish_videoscan"
-														});
+											var spider = _yt_spiderlib;
+                							console.log("spid135: complete dbGetVideo");
+											lspider.broadcastEvent(
+												{ event: "idb_finish_videoscan"
+												});
 											if (this.comments_done)
 											{
 												this.comments_done.call(this); // @@this decision
@@ -2044,10 +2054,25 @@ N9YTSpiderLib.prototype = {
     {
     }
     ,
+    broadcastEvent: function (event, options)
+    {
+    	console.log("spid2059: spider.broadcastEvent", event, options);
+    	if (!options) options = {};
+    	_njn.execute("spider_event", event);
+    	
+    	options.broadcast = true;
+    	_njn.send({ cmd: "spider_event",
+					event: event
+				  },
+				  options
+				  );
+    	
+    },
     clueList: function ()
     {
     	return this.clues;
     },
+  	// @@CALLBACK @@INTERPROCESS
   	executeAlternateMode: function (func_name, query, options)
   	{
   		addHistory(options, "executeAlternateMode");
@@ -2532,10 +2557,13 @@ N9YTSpiderLib.prototype = {
     									}
     						   );
 	},
-	// @@DEPRECATED
+	
+	
+	
+	// @@DEPRECATED SEE rdbCurseComments
     // @@DEPRECATED
     // @@DEPRECATED
-    // @@DEPRECATED
+    // @@DEPRECATED 
     dbCurseComments: function (query, callback) // deprecated see rdb version
     {
     // @@DEPRECATED
@@ -2546,6 +2574,7 @@ N9YTSpiderLib.prototype = {
         var cbtype = typeof(callback);
         var options = null;
         
+        // PARAMETER JUGGLING to adopt function xyz(options) call signature
         if (cbtype == "function")
         {
         	options = {complete:callback};
@@ -2599,8 +2628,14 @@ N9YTSpiderLib.prototype = {
         }
     },
     
-    // NOT TO BE CONFUSED WITH dbCurseComments above, developed for the map which will 
-    // be ported to this cleaner version 
+    // NOT TO BE CONFUSED WITH dbCurseComments above 
+    //     (which is obsolete, use this version)
+    // NOT TO BE CONFUSED WITH dbCurseComments above
+    // NOT TO BE CONFUSED WITH dbCurseComments above
+    // NOT TO BE CONFUSED WITH dbCurseComments above
+    // NOT TO BE CONFUSED WITH dbCurseComments above
+    // NOT TO BE CONFUSED WITH dbCurseComments above
+    // port to this cleaner version 
     rdbCurseComments: function (query, options)
     {
     	console.log("spid2555: rdbCurseComments");
@@ -2610,7 +2645,7 @@ N9YTSpiderLib.prototype = {
     									{
     										"foreach":callback
     									}
-    		);
+    								 );
     	if (eventhandled)
     	{	//alternate mode returns true means... deferred
     		console.log("spid2565: rdbCurseComments");
@@ -2710,44 +2745,9 @@ N9YTSpiderLib.prototype = {
     
     rdbGetVideo: function (query, options)
     {
-    	var videoID = query.video_id;
-    	var callback = options.gv_complete; 
-    	addHistory(options, "rdbGetVideo");
-    	
-    	// // // // // // // // // //
-    	// alternate mode header
-    	console.log("spid2655:", videoID,
-    							"options=",options);
-    	var eventhandled = 
-    		this.executeAlternateMode("dbGetVideo", 
-    									{
-    										video_id: videoID,
-    									},
-    									options
-    		);
-    		
-    	
-    	if (eventhandled)
-    	{	//alternate mode returns true means... deferred
-    		console.log("spid2565: dbGetVideo handled by alternate mode");
-			// call the callback
-    		return;		
-    	}
-    	//  // // // // // // // // //
-    	// // // // // // // // // // 
-    	
-    	var enclosed_callback = callback;
-    	var enclosed_spider = this;
-    	var transaction = this.db.transaction(["videos"]);
-    	var objectstore = transaction.objectStore("videos");
-    	
-    	if(!options) {options = {}};
-    	options.videoID = videoID;
-    	
-    	objectstore.get(videoID)
-    		.onsuccess = function (event)
+    	function objstoreCallback(event)
     		{
-    			console.log("spid2025: dbGetVideo: objstore.get.onsuccess");
+    			console.log("spid2025: dbGetVideo: objstore.get.onsuccess", event);
     			var spider  = _njn.inline("get_spider")[0];
     			result = event.target.result;
     			if (result)
@@ -2763,6 +2763,46 @@ N9YTSpiderLib.prototype = {
     				enclosed_callback.call(options);
     			}
     		};
+    	var videoID = query.video_id;
+    	var callback = options.gv_complete; 
+    	addHistory(options, "rdbGetVideo");
+    	
+    	// // // // // // // // // //
+    	// alternate mode header
+    	console.log("spid2655:", videoID,
+    							"options=",options);
+    	options.video_get_complete = objstoreCallback;
+    	
+    	var eventhandled = 
+    		this.executeAlternateMode("dbGetVideo", 
+    									{
+    										video_id: videoID,
+    									},
+    									options
+    		);
+    		
+    	// @@WORKPOINT : look at this thing... this can't bail on eventhandled here! do comments!
+    	if (eventhandled)
+    	{	//alternate mode returns true means... deferred
+    		console.log("spid2565: dbGetVideo handled by alternate mode");
+			// call the callback
+			// @@WORKINGPOINT
+			
+    		return;		
+    	}
+    	//  // // // // // // // // //
+    	// // // // // // // // // // 
+    	
+    	var enclosed_callback = callback;
+    	var enclosed_spider = this;
+    	var transaction = this.db.transaction(["videos"]);
+    	var objectstore = transaction.objectStore("videos");
+    	
+    	if(!options) {options = {}};
+    	options.videoID = videoID;
+    	
+    	objectstore.get(videoID)
+    		.onsuccess = objstoreCallback;
     },
     dbCurseVideos: function (username, callback)
     {
