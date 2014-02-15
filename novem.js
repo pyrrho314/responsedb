@@ -2119,7 +2119,7 @@ function Novem() {
     	var funcname = msg.callback_name;
     	var cb_register = _njn.callback_register;
     	
-    	console.log("nj2067: callback_dispatch (msg, cb_dict, cb_register) ",
+    	console.log("nj2067: idb_videoscan callback_dispatch (msg, cb_dict, cb_register)",
     				funcname, msg, cb_dict, cb_register);
     	
     	if (funcname in cb_dict)
@@ -2132,21 +2132,31 @@ function Novem() {
     			
     			var eventID =  msg.event.rq.cmd + "." + msg.event.rq.func_name 
     							+ "." + msg.callback_name;
+    			var cbname = msg.callback_name;
     			console.log("nj2089:"+eventID);
     			switch (eventID)
     			{
+    				// @@REFACTOR: I think this case should be in the spider.
     				case "element_curse.dbGetVideo.complete":
+    				case "element_curse.dbGetVideo.gv_complete":
     					var video_morsel = msg.event.video_record;
-    					console.log("nj2135: CBS", video_morsel);
+    					console.log("nj2135: idb_videoscan CBS", video_morsel);
     					var video = rdb_spider.addVideo(video_morsel, true); // true == memonly
     					var callerobj = { 
     						videoID: video.get("video_id"),
     						n9video: video,
-    						complete: func_ptr
     						};
-    					console.log("nj2142: CBS", callerobj);
-    					func_ptr.call(callerobj)
+    					callerobj[cbname] = func_ptr;
+    					
+    					console.log("nj2142: idb_videoscan CBS", callerobj, func_ptr);
+    					//???
+    					// here is where we call the callback as a result of the message
+    					// without the 
+    					//???
+    					func_ptr.call(callerobj);
     					break;
+    				default:
+    					console.log("unhandled: callback "+eventID);
     			}
     		}
     		

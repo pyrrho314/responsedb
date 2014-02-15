@@ -415,8 +415,9 @@ case "comment_bearing":
 						);
 
 	var rstitle = $("<div>",
-						{	html: "ResponseDB<br/>Summary",
-							css: {	fontSize: "20px",
+						{	html: "ResponseDB",
+							css: {	fontSize: "15px",
+									fontVariant: "small-caps",
 									verticalAlign: "middle",
 									//"margin-left" :"15px",
 									//"margin-right":"15px",
@@ -428,6 +429,21 @@ case "comment_bearing":
 								 }
 						
 						});
+	rstitle.append( $("<div>",
+						{	html: "<br/>Summary",
+							css: {	fontSize: "20px",
+									fontVariant: "normal",
+									verticalAlign: "middle",
+									//"margin-left" :"15px",
+									//"margin-right":"15px",
+									"padding-left":"53px",
+									"margin-top":"2px",
+									//display: "table-cell",
+									height: "auto",
+									width:"100%"
+								 }
+						
+						}));
 
 	var showhideLocalState = null;
 	if ("rdb_showhide_state" in localStorage)
@@ -562,13 +578,13 @@ case "comment_bearing":
 			
 			$(this).prop("disabled", true);			
 			n9spider_idb_videoscan(vid, 
-				{complete: 
-					function (event)
+				{
+					complete: function (event)
 						{
 							usercursecommentsEL.prop("disabled", false);
 							console.log("sR569: sent idb video request", event);
 						},
-					get_comments:true,
+					get_comments: true,
 					foreach_comment: function (event)
 					 {
 					 	console.log("sr573:", event);

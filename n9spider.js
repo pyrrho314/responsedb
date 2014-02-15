@@ -84,6 +84,7 @@ function n9spider_yt_userscan(username, map, create_domicile)
 
 function n9spider_idb_videoscan(videoID, options)
 {
+	console.log("spid87: options", options);
 	// signature above is original one...
 	// but it can be totally options based, mcay?
 	var lspider = rdb_spider;
@@ -98,7 +99,15 @@ function n9spider_idb_videoscan(videoID, options)
 	{
 		options.videoID = videoID;
 	}
-	console.log("spid83: idb_videoscan options to idb_videoscan",options);
+	
+	
+	if ("complete" in options)
+	{
+		options.idb_complete = options.complete;
+		delete options.complete;
+	}
+	
+	console.log("spid110: idb_videoscan options to idb_videoscan",options);
 	
 	//c/onsole.trace();
 	// @@DOCO: NOTE, I use call and apply to turn option into this a lot!!!!! warning
@@ -111,72 +120,85 @@ function n9spider_idb_videoscan(videoID, options)
 					video_id: videoID,
 					options: options
 				});
-				
-	lspider.dbGetVideo(
-		videoID, 
-		function ()
-			{	//@@DEV @@TODO: I don't like how I used $extend on the options
-				var video = this.n9video;
-				var videoID = this.videoID;
-				var complete_func = this.complete;
-				this.comments_done = complete_func;
-				console.log("spid107:", this);
-				if (video && this.get_comments)
-				{
-					console.log("spid77:idb_videoscan retrieved:", video.get("video_id"));
-					if (video)
-					{
-						var videoID = video.get("video_id");
-						console.log("spid84: "+video.get("video_id")+" found in local IDB");
-						rdb_spider.rdbCurseComments
+	function when_gv_complete()	
+	{	//@@DEV @@TODO: I don't like how I used $extend on the options
+		var video = this.n9video;
+		var videoID = this.videoID;
+		var complete_func = this.idb_complete;
+		this.comments_done = complete_func;
+		console.log("spid107:", this);
+		return;
+		//alert("pased");
+		if (video && this.get_comments)
+		{
+			console.log("spid77:idb_videoscan retrieved:", video.get("video_id"));
+			if (video)
+			{
+				var videoID = video.get("video_id");
+				console.log("spid84: "+video.get("video_id")+" found in local IDB");
+				rdb_spider.rdbCurseComments
+				(
+					 {
+						video_id: videoID,
+					 },
+					 $.extend
 						(
-							 {
-								video_id: videoID,
-							 },
-							 $.extend
-								(
-									options, 
+							options, 
+							{
+								foreach: function (comment)
+								{
+									var content = comment.get("content");
+								
+									rdb_spider.checkCommentForClues(comment);
+									var author = comment.get("author");
+									var author_pretty = comment.get("author_pretty");
+									/*
+									console.log("spid133: author", author_pretty, author);
+									if (author == "nitelite78" || author_pretty == "nitelite78")
 									{
-										foreach: function (comment)
-										{
-											var content = comment.get("content");
-										
-											rdb_spider.checkCommentForClues(comment);
-											var author = comment.get("author");
-											var author_pretty = comment.get("author_pretty");
-											/*
-											console.log("spid133: author", author_pretty, author);
-											if (author == "nitelite78" || author_pretty == "nitelite78")
-											{
-												console.log("spid136:", comment.get("content"), comment);
-											}
-											*/
-										},
-										complete: function ()
-										{
-											var spider = _yt_spiderlib;
-                							console.log("spid135: complete dbGetVideo");
-											lspider.broadcastEvent(
-												{ event: "idb_finish_videoscan"
-												});
-											if (this.comments_done)
-											{
-												this.comments_done.call(this); // @@this decision
-											}
-										}
+										console.log("spid136:", comment.get("content"), comment);
 									}
-								)
-							
-						);	
-					}
-					// conditional above should not return without calling complete function
-				}
-				else
-				{	// if we are not getting comments, we're done, call the complete
-					// otherwise it's called from the rdbCurseComments callback
-					this.complete.call(this);
-				}
-			},
+									*/
+								},
+								complete: function ()
+								{
+									var spider = _yt_spiderlib;
+									console.log("spid135: complete dbGetVideo");
+									lspider.broadcastEvent(
+										{ event: "idb_finish_videoscan"
+										});
+									if (this.comments_done)
+									{
+										this.comments_done.call(this); // @@this decision
+										console.log("spid162:", this.comments_done);
+										alert("pause");
+									}
+								}
+							}
+						)
+					
+				);	
+			}
+			// conditional above should not return without calling complete function
+		}
+		else
+		{	// if we are not getting comments, we're done, call the complete
+			// otherwise it's called from the rdbCurseComments callback
+			this.complete.call(this);
+		}
+	}	
+	
+	if (options && options.gv_complete)
+	{
+		options.idb_gv_complete = options.gv_complete;
+	}
+	
+	options.gv_complete = when_gv_complete;	
+	console.log("spid184: idb_videoscan options in idb_videoscan", options);
+	lspider.rdbGetVideo(
+		{
+			video_id: videoID, 
+		},
 		options);
 }
 
@@ -2038,6 +2060,12 @@ N9YTSpiderLib.prototype = {
 																video_record:this.n9video.record
 																},
 																options); 
+												_njn.send_callback_event("gv_complete", 
+																{
+																rq: rq,
+																video_record:this.n9video.record
+																},
+																options); 
 											}
 										});
 						//_njn.send_callback_event("complete", rq, options);				
@@ -2747,7 +2775,8 @@ N9YTSpiderLib.prototype = {
     {
     	function objstoreCallback(event)
     		{
-    			console.log("spid2025: dbGetVideo: objstore.get.onsuccess", event);
+    			console.log("spid2759: idb_videoscan dbGetVideo: objstore.get.onsuccess", event);
+    			console.log("spid2760: idb_videoscan enclosed_callback", enclosed_callback);
     			var spider  = _njn.inline("get_spider")[0];
     			result = event.target.result;
     			if (result)
@@ -2784,7 +2813,7 @@ N9YTSpiderLib.prototype = {
     	// @@WORKPOINT : look at this thing... this can't bail on eventhandled here! do comments!
     	if (eventhandled)
     	{	//alternate mode returns true means... deferred
-    		console.log("spid2565: dbGetVideo handled by alternate mode");
+    		console.log("spid2565: idb_videoscan dbGetVideo handled by alternate mode");
 			// call the callback
 			// @@WORKINGPOINT
 			
