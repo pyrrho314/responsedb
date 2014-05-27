@@ -1,6 +1,7 @@
 // DEBUG FLAGS
 // Clue Tracker
-TRACKER_PHRASE = "update here"; // false
+TRACKER_PHRASE = "watch"; // false
+console.log("spid1: loading");
 
 function n9spider_yt_userscan(username, map, create_domicile)
 {
@@ -14,7 +15,7 @@ function n9spider_yt_userscan(username, map, create_domicile)
     
     console.log("spid3: username="+username+" create_domicile="+create_domicile);
     if (dbg_stopscan)
-    { // should change this to non-dbg as am using it for global state
+    {   // should change this to non-dbg as am using it for global state
         return;
     }
     
@@ -210,7 +211,6 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
 	// @@    : since youtube isn't updating those types of records, it's just new ones.
 	// @@    : HOWEVER: it does go ahead and contact youtube about the video in question
 	// @@    : because any caller has likely already checked that. ? right ?
-	
     //var enc_func = complete_func;
     if (typeof(video_id) == "object")
     {
@@ -223,13 +223,15 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
     	options.videoID = video_id;
     	options.n9complete = complete_func;
     }
-    
+    console.log("spid226: yt_videoscan");
+    console.trace();
     $.ajax({type: "get",
             dataType: "json",
             url: "http://gdata.youtube.com/feeds/api/videos/"+options.videoID+"?alt=json",
             context: options,
             success: function (data)
                 {
+                    console.log("spid234: success", data); 
                 	var entry;
                 	if (data.entry)
                 	{
@@ -281,35 +283,23 @@ function n9spider_yt_videoscan(video_id, complete_func, options)
                     			max: 250,
                     			foreach: this.foreach
                     		});
-                    	/*
-                    		$.ajax({type:"get",
-								dataType:"json",
-								url: commentfeedurl,
-								success: function (data) {
-									//c/onsole.log("spid93: comments reply");
-									//c/onsole.log(data);
-									n9spider_yt_feedparse_comments( 
-										{ 	username:	username, 
-											feed:		data.feed,
-											map: 		null,
-											create_domicile: false,
-											foreach: this.foreach,
-										});
-									var nexturl = n9spider_yt_getlink(data.feed.link, "next");
-					
-						
-									console.log("spid68: next comment url --> "+nexturl);
-								}
-							   }
-							  );
-						*/
                     } 
-                    if (this.n9complete)
+                    console.log("spid287: n9complete", this);
+
+                    if (this.n9complete) //@@TODO: naming issues with callbacks... this is an issue due to nested requests
                     {
+                        console.log("spid291: n9complete", this);
                     	this.n9video = vid;
                         this.n9complete.call(this);
                     }
+                },
+            error: function (data)
+            {
+                if (this.n9error)
+                {
+                    this.n9error.call(this);
                 }
+            }
             });
 }
 function n9spider_yt_feedparse_responses(username, feed, map, event_time, create_domicile)
@@ -487,13 +477,16 @@ function n9spider_yt_recurseComments(options)
 
 	// @@ NOTE: DOES NOT RECURSE YET!  use setTimeout
 	var enclosed_username = username;
-	$.ajax({type:"get",
+	console.log("spid490: yt_recurseComments", options);
+    console.trace();
+            
+    $.ajax({type:"get",
 		dataType:"json",
 		url: commentsurl,
 		context:options,
 		success: function (data) {
-			//c/onsole.log("spid93: comments reply");
-			//c/onsole.log(data);
+			console.log("spid478: comments reply");
+			console.log(data);
 			var options = $.extend(
 				{	username:this.username, 
 					feed: data.feed,
@@ -505,10 +498,12 @@ function n9spider_yt_recurseComments(options)
 			var nexturl = n9spider_yt_getlink(data.feed.link, "next");
 			
 				
-			console.log("spid315: next comment url --> "+nexturl);
-			console.log("spid316: ", _yt_spiderlib.comments_by_video_id);
-			console.log("spid317: ", data.feed.entry[0]);
-			var videoid = n9spider_yt_get_videoid_from_commententry(data.feed.entry[0]);
+			console.log("spid508: next comment url --> "+nexturl);
+			console.log("spid509: ", _yt_spiderlib.comments_by_video_id);
+            console.log("options: this,options ", this, options);
+            console.log("spid510: ", data.feed);
+            console.log("spid510: ", data.feed.entry[0]);
+            var videoid = n9spider_yt_get_videoid_from_commententry(data.feed.entry[0]);
 			var numcom = _yt_spiderlib.comments_by_video_id[videoid].length;
 			console.log("spid319: number comments already ", numcom, "vs", max);
 			
@@ -840,13 +835,165 @@ function n9spider_yt_scanall(map)
     return;
 }
 
+function n9spider_yt_sidebar_video_div(args)
+{
+    var video = 0;
+    
+    if ("n9_video" in args)
+    { //@@ARGS: n9_video == n9video
+        video = args.n9_video;
+    }
+    else if ("n9video" in args)
+    {
+        video = args.n9video;
+    }//c/onsole.log("spid163: args videodiv");
+    //c/onsole.log(args);
+    var post_date = video.get("post_date");
+    var video_id = video.get("video_id");
+    //var post_date = args.n9_video.get("post_date");
+    //var video_id = args.n9_video.get("video_id");
+    
+    
+    //c/onsole.log("spid393: yt_video_div");
+    //c/onsole.log(video);
+    var video_viewed = video.get("video_viewed");
+    var bgcolor = "#FFFFFF";
+    if (video_viewed)
+    {
+        bgcolor = "#d0d0d0";
+    }
+    
+    var newel = $("<div>",
+                    {   css: {  
+                                border:"solid black 1px",
+                                margin:"2px",
+                                padding:"0px",
+                                width:"95%",
+                                backgroundColor: bgcolor
+                             },
+                        video_id: video_id,
+                        id: "card_"+video_id, //@@NAMECON: id for card shaped div
+                        class: "video_card"
+                    }
+                    );
+
+    
+    
+   
+    var thumbel =    $("<a class='video_thumb' video_id='"+ video_id +"'>").append(
+        $("<img>", 
+        {   src : video.get("thumbnail"),
+            width:"100px",
+            css: {padding:"5px",float:"right"}
+        })
+        );
+    
+    // date string
+    console.log("spid908:", video);
+    
+    
+    // video ID element
+    
+    newel.append ($("<a>", 
+                        {
+                            class: "response_title",
+                            href: video.get("video_url"),
+                            text: video.get("title"),
+                            css:{   fontSize:"110%",
+                                    fontWeight: "bold",
+                                    color: "lightBlue",
+                                    backgroundColor: "black",
+                                    width: "100%",
+                                    padding: "2px",
+                                    fontDecoration: "none",
+                                    display: "block"
+                                }
+                        }
+                    )
+                  );
+    ///////////////////
+    ///// video thumbnail
+    //////////
+    newel.append( thumbel );
+    
+    
+    var infobox = $("<div>",
+                    {   css: 
+                        {   padding: "3px",
+                        }
+                    });
+    //// video author
+    infobox.append($("<br>"));
+    infobox.append ($("<span>", 
+                        {
+                            href: video.get("video_url"),
+                            html:"video by: <b>"+video.get("author_pretty")+"</b> ",
+                            css:{   
+                                    fontStyle:"italic",
+                                    fontSize:"80%"
+                                }
+                        }
+                    )
+                  );
+
+    // datestring element
+    var datestr = new Date(post_date).toString();
+    var dateparts = datestr.split(" ");
+    dateparts = dateparts.splice(0,5);
+    datestr = dateparts.join(" ");
+    infobox.append ($("<div>",
+                    {
+                        css:{fontSize:"90%",
+                             rightMargin:"10px"},
+                        html: datestr
+                    })
+                 );
+    
+    // comment counts
+    var vidid = video_id;
+    infobox.append( $("<div>",
+                        {   css: {fontSize:"80%"},
+                            text:"est. # comments: "
+                                    + video.get("comments_count")
+                        }
+                    )
+                );
+    
+    infobox.append( $("<div>",
+                        {
+                            class: "info-"+vidid,
+                            css:{   width:"90%",
+                                    }
+                        }
+                    )
+                );
+    newel.append(infobox);
+    
+    newel.append( $("<br clear='all'/>"));
+    newel.attr("data-timestamp",post_date);
+    
+    return newel;
+}
+
+
 function n9spider_yt_video_div(args)
 {
-    //c/onsole.log("spid163: args videodiv");
+    var video = 0;
+    
+    if ("n9_video" in args)
+    { //@@ARGS: n9_video == n9video
+        video = args.n9_video;
+    }
+    else if ("n9video" in args)
+    {
+        video = args.n9video;
+    }//c/onsole.log("spid163: args videodiv");
     //c/onsole.log(args);
-    var post_date = args.n9_video.get("post_date");
-    var video_id = args.n9_video.get("video_id");
-    var video = args.n9_video;
+    var post_date = video.get("post_date");
+    var video_id = video.get("video_id");
+    //var post_date = args.n9_video.get("post_date");
+    //var video_id = args.n9_video.get("video_id");
+    
     
     //c/onsole.log("spid393: yt_video_div");
     //c/onsole.log(video);
@@ -906,12 +1053,13 @@ function n9spider_yt_video_div(args)
 		})
 		);
 	
-
+    console.log("spid908:", video);
     newel.append( thumbel );
+    newel.append($("<br>"));
     newel.append ($("<span>", 
                         {
                             href: video.get("video_url"),
-                            html:"video by: <b>"+args.n9_video.get("author")+"</b> ",
+                            html:"video by: <b>"+video.get("author_pretty")+"</b> ",
                             css:{   
                                     fontStyle:"italic",
                                     fontSize:"70%"
@@ -999,6 +1147,32 @@ function N9YTUser(userprops) {
     this.set_objval("collect_name", "users");
 }       
 N9YTUser.prototype = new N9Morsel();
+
+function N9Response(clueprops) {
+    N9Morsel.call(this);
+
+    if("_obj" in clueprops)
+    {
+        this.record = clueprops;
+    }
+    else
+    {
+        var targetID = clueprops.targetID;
+        var responseID = clueprops.responseID;
+        
+        this.set("targetType", "youtube");
+        this.set("targetID", targetID);
+        this.set("responseType", "youtube");
+        this.set("responseID", responseID);
+        var name = responseID+"_TO_"+targetID; //@@ naming convention
+        this.set("chainID", name);
+        this.setMorselVal("_obj.name", name);
+        this.setMorselVal("_obj.db_name", "spiderdb");
+        this.setMorselVal("_obj.namespace", "youtube");
+        this.setMorselVal("_obj.collect_name", "responses");
+    }
+}
+N9Response.prototype = new N9Morsel();
 
 
 // YT VIDEO
@@ -1104,6 +1278,7 @@ N9YTVideo.prototype.yt_scan_comments = function ()
                         + " " +username
                         + " " +commentsurl
                         + " " + max);
+            console.trace();
             var enclosed_username = username;
             if (typeof(max) == "undefined")
             {
@@ -1146,6 +1321,7 @@ N9YTVideo.prototype.yt_scan_comments = function ()
               );
         }
     var video_author = this.get("author");
+    console.log("spid1156: about to recurse comments");
     recurseComments(video_author, commentsurl, depth);
 }
 N9YTVideo.prototype.authorLink = function ()
@@ -1469,10 +1645,12 @@ function groupsToDict(clue, groups)
 }
 
 rdbGenericVideoLinkTypes = {
-	watchlink: { 	site: "Youtube Watchlink",
+	watchlink: { 	
+                disabled: false,
+                site: "Youtube Watchlink",
 				indicator: "watch?v=",
 				protocol: "youtube2013",
-				regex: /(\s|\/)(watch\?v=([a-zA-Z0-9]+?))(\s|$)/g,
+				regex: /(\s|\/)(watch\?v=([-_a-zA-Z0-9]+?))((\s|&(.*?)|)$)/g,
 				rcolor: "lightGray",
 				group_adaptor: ["lead_space",
 								"watch_frag",
@@ -1507,7 +1685,63 @@ rdbGenericVideoLinkTypes = {
 							return clue;
 						}
 			 },
-	youdoubled: { 	site: "Confrep's Site",
+    youtube: {  disabled: true,
+                site: "Youtube",
+                indicator: "youtube",
+                protocol: "youtube2013",
+                regex: /(^|\s)youtube\s+([a-zA-Z0-9]+?)(\s|$)/g,
+                group_adaptor: ["lead_space",
+                                "video_id",
+                                "end_video_id",
+                                ],
+                rcolor: "lightBlue",
+                mkURL: function (groups)
+                        {
+                            var gdict = groupsToDict(this, groups);
+                            if ("video_id" in gdict)
+                            {
+                                var tehpath = "http://www.youtube.com/watch?v="
+                                                +gdict.video_id;
+                                return tehpath;
+                            }
+                        },
+                mkID: function (groups)
+                        {
+                            var gdict = groupsToDict(this, groups);
+                            if ("video_id" in gdict)
+                            {
+                                return groups[1]
+                            }
+                        },
+                mkClue: function (groups)
+                        {
+                            var clue = $.extend(true, {}, this);
+                            clue.videoID = this.mkID(groups);
+                            
+                            clue.URL = this.mkURL(groups);
+                            clue.site = this.site;
+                            clue.typename = "youtube";
+                            return clue;
+                        },
+                validateID: function (id)
+                    {
+                        //var numbers = id.search(/\d/);
+                        //var lowers  = id.search(/[a-z]/);
+                        //var uppers  = id.search(/[A-Z]/);
+                        var len = id.length;
+                        //var rightlen = (len >10) && (len <16);
+                        var rightlen = (len == 11);
+                        /*console.log("spid1283: validate youtube id:", 
+                                    len, 
+                                    rightlen, '"'+id+'"',
+                                    this);
+                        */
+                        return rightlen;
+                        //return numbers && lowers && uppers && rightlen;
+                    }
+             },
+	youdoubled: { 	disabled: true,
+                    site: "Confrep's Site",
 					indicator: "youdoubled",
 					protocol: "clipbucket2013",
 					regex: /youdoubled\s+(.*?)\s/g,
@@ -1550,62 +1784,8 @@ rdbGenericVideoLinkTypes = {
 						//return numbers && lowers && uppers && rightlen;
 					}
 			},
-	youtube: { 	disabled: true,
-				site: "Youtube",
-				indicator: "youtube",
-				protocol: "youtube2013",
-				regex: /(^|\s)youtube\s+([a-zA-Z0-9]+?)(\s|$)/g,
-				group_adaptor: ["lead_space",
-								"video_id",
-								"end_video_id",
-								],
-				rcolor: "lightBlue",
-				mkURL: function (groups)
-						{
-							var gdict = groupsToDict(this, groups);
-							if ("video_id" in gdict)
-							{
-								var tehpath = "http://www.youtube.com/watch?v="
-												+gdict.video_id;
-								return tehpath;
-							}
-						},
-				mkID: function (groups)
-						{
-							var gdict = groupsToDict(this, groups);
-							if ("video_id" in gdict)
-							{
-								return groups[1]
-							}
-						},
-				mkClue: function (groups)
-						{
-							var clue = $.extend(true, {}, this);
-							clue.videoID = this.mkID(groups);
-							
-							clue.URL = this.mkURL(groups);
-							clue.site = this.site;
-							clue.typename = "youtube";
-							return clue;
-						},
-				validateID: function (id)
-					{
-						//var numbers = id.search(/\d/);
-						//var lowers  = id.search(/[a-z]/);
-						//var uppers  = id.search(/[A-Z]/);
-						var len = id.length;
-						//var rightlen = (len >10) && (len <16);
-						var rightlen = (len == 11);
-						/*console.log("spid1283: validate youtube id:", 
-									len, 
-									rightlen, '"'+id+'"',
-									this);
-						*/
-						return rightlen;
-						//return numbers && lowers && uppers && rightlen;
-					}
-			 },
-	vimeo: { 	site: "Vimeo",
+	vimeo: { 	disabled: true,
+                site: "Vimeo",
 					indicator: "vimeo",
 					protocol: "vimeo2013",
 					regex: /vimeo\s+(.*?)\s/g,
@@ -1642,7 +1822,8 @@ rdbGenericVideoLinkTypes = {
 						return allnums;
 					}
 			},
-	dailymotion: { 	site: "DailyMotion",
+	dailymotion: { 	disabled: true,
+                    site: "DailyMotion",
 					indicator: "dailymotion",
 					protocol: "dailymotion2013",
 					regex: /dailymotion\s+\/?video\/(.*?)\s/g,
@@ -1675,38 +1856,39 @@ rdbGenericVideoLinkTypes = {
 							return clue;
 						}
 			},
-	web: { 	site: "The Web",
-					indicator: "theweb",
-					protocol: "webURL",
-					regex: /theweb\s+(.*?)\s+(.*?)\s+(.*?)\s/g,
-					mkURL: function (groups)
-						{
-							//console.log("sR149:", groups);
-							if (groups.length>1)
-							{
-								var tehurl= "http://www.dailymotion.com/video/"+groups[2];
-								//console.log("sR321:", tehurl);
-								return tehurl;
-							}
-						},
-					mkID: function (groups)
-						{
-							if (groups.length>1)
-							{
-								return groups[1];
-							}
-						},
-				mkClue: function (groups)
-						{
-							var clue = $.extend(true, {}, this);
-							
-							clue.videoID = this.mkID(groups);
-							clue.URL = this.mkURL(groups);
-							clue.site = this.site;
-							clue.typename = "dailymotion";
-							return clue;
-						}
-			}
+	web: { 	disabled: true,
+            site: "The Web",
+            indicator: "theweb",
+            protocol: "webURL",
+            regex: /theweb\s+(.*?)\s+(.*?)\s+(.*?)\s/g,
+            mkURL: function (groups)
+                    {
+                        //console.log("sR149:", groups);
+                        if (groups.length>1)
+                        {
+                            var tehurl= "http://www.dailymotion.com/video/"+groups[2];
+                            //console.log("sR321:", tehurl);
+                            return tehurl;
+                        }
+                    },
+            mkID: function (groups)
+                    {
+                        if (groups.length>1)
+                        {
+                            return groups[1];
+                        }
+                    },
+            mkClue: function (groups)
+                    {
+                        var clue = $.extend(true, {}, this);
+                        
+                        clue.videoID = this.mkID(groups);
+                        clue.URL = this.mkURL(groups);
+                        clue.site = this.site;
+                        clue.typename = "dailymotion";
+                        return clue;
+                    }
+		}
 	};
 
 
@@ -2038,7 +2220,7 @@ N9YTSpiderLib.prototype = {
 		answer.ack = true;
 		answer.fate = "event_initiated";
 		answer.command = rq.cmd;
-
+        console.log("spid2052: backgroundHandleRequest (rq,options)",rq, options);
 		switch(cmd)
 		{ 
 			case "element_curse":
@@ -2054,19 +2236,26 @@ N9YTSpiderLib.prototype = {
 										{gv_complete: function (arg)
 											{
 												console.log("spid2024:", this, arg);
-												_njn.send_callback_event("complete", 
-																{
-																rq: rq,
-																video_record:this.n9video.record
-																},
-																options); 
-												_njn.send_callback_event("gv_complete", 
-																{
-																rq: rq,
-																video_record:this.n9video.record
-																},
-																options); 
-											}
+                                                if (true)//this.status != "fail")
+                                                {
+                                                    _njn.send_callback_event("complete", 
+                                                        {
+                                                        rq: rq,
+                                                        video_record:this.n9video.record
+                                                        },
+                                                        options); 
+                                                    _njn.send_callback_event("gv_complete", 
+                                                        {
+                                                        rq: rq,
+                                                        video_record:this.n9video.record
+                                                        },
+                                                        options); 
+                                                }
+                                                else
+                                                {
+                                                    console.log("dbGetVideo failed",this);
+                                                }
+                                            }
 										});
 						//_njn.send_callback_event("complete", rq, options);				
 						break;
@@ -2432,15 +2621,21 @@ N9YTSpiderLib.prototype = {
     checkTextForClues: function (content, extrainfo)
     {
     	var tracker = false;
-    	if (content.indexOf("update here:") >=0)
+    	if (content.indexOf(TRACKER_PHRASE) >=0)
     	{
     		tracker = true;
     		console.log("spid2281:", content, extrainfo);
     	}
     	var genericVideoLinkTypes = rdbGenericVideoLinkTypes;
+        var gen_extrainfo = {};
+        if (!extrainfo)
+        {
+            extrainfo = gen_extrainfo;
+        };
     	var timestamp = extrainfo.timestamp ? extrainfo.timestamp: null;
-    	var source = extrainfo.source ? extrainfo.source: "unknown.checkTextForClues";
-    	if (!extrainfo.source)
+    	var source = extrainfo.source ? extrainfo.source: "unknown.checskTextForClues";
+    	console.log("spid2443:", source);
+        if (!extrainfo.source)
     	{
     		console.log("spid2127:", extrainfo);
     		console.trace();
@@ -2458,12 +2653,12 @@ N9YTSpiderLib.prototype = {
     	for (genlinktypename in genericVideoLinkTypes)
 		{
 			var genlinktype = genericVideoLinkTypes[genlinktypename];
-		
     		if (genlinktype.disabled == true)
     		{
     			//c/onsole.log("spid2138: linktype disabled ->", genlinktype.site)
     			continue;
     		}
+    		console.log("spid2473: checking for ", genlinktypename, genlinktype);
 			var indicator = genlinktype.indicator;
 			var regex = genlinktype.regex;
 			var mkURL = genlinktype.mkURL;
@@ -2477,11 +2672,15 @@ N9YTSpiderLib.prototype = {
 			
 			if (hasclue)
 			{
-				if (tracker)
+				if (true) //tracker)
 				{
-					console.log("spid2327: hasclue", hasclue);
+					console.log("spid2489: hasclue", hasclue);
 				}
 				var matches = content.match(regex);
+                if (true)
+                {
+                        console.log("spid2494: matches", matches)
+                }
 				if (tracker)
 				{
 					console.log("spid2155: tracker:",  matches, content);
@@ -2492,28 +2691,31 @@ N9YTSpiderLib.prototype = {
 				// @@DEBUG
 					if (matches)
 					{
+                        var tracker = true; // @@DEBUG
 						for (var j=0; j<matches.length; j++)
 						{
 							if (tracker)
-							{	console.log("spid2166 (tracker) matches",j,":", matches[j])
+							{	console.log("spid2510 (tracker) match #",j,":", matches[j])
 							}
 							var groups = regex.exec(matches[j]);
 							if (tracker)
 							{
-								console.log("sR2348: (tracker)", groups);
+								console.log("sR2515: (tracker)", groups);
 							}
 							
 							if (groups) 
 							{
 								// rdb_spider should be this!
 								var clue = mkClue.call(genlinktype, groups);
-								var validid = false
+                                console.log("spid2522: clue", clue);
+								var validid = false;
 								if (validateID)
 								{
 									validid = validateID.call(clue, clue.videoID);
 								}
 								else
 								{
+                                    console.log("spid2530: no validateID function... assuming id valid =>", clue.videoID);
 									validid = true; // no function means they are all valid
 								}
 								/*console.log("spid1970: valid id?", 
@@ -2556,8 +2758,8 @@ N9YTSpiderLib.prototype = {
 									if (extrainfo && ("callback" in extrainfo))
 									{
 										extrainfo.callback.call(extrainfo, clue);
-										
 									}
+									return clue;
 								}
 							}	
 						}
@@ -2579,12 +2781,13 @@ N9YTSpiderLib.prototype = {
     {
     	var content = comment.get("content");
     	this.checkTextForClues(content, {   author: comment.get("author"),
-    										author_pretty: comment.get("author_pretty"),
-    										timestamp: comment.get("timestamp"),
-    										source: "idb.checkCommentForClues"
-    									}
-    						   );
+					    author_pretty: comment.get("author_pretty"),
+					    timestamp: comment.get("timestamp"),
+					    source: "idb.checkCommentForClues"
+					}
+    			       ) ;
 	},
+	
 	
 	
 	
@@ -3085,4 +3288,5 @@ $("body").ready(function ()
     {
         return _yt_spiderlib;
     });
+    _njn.callback_listen();
 });

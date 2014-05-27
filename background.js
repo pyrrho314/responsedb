@@ -1,3 +1,6 @@
+console.log("loading background.js");
+console.log("window.location.href", window.location.href);
+
 function initialiseSettings(){
 
 if(typeof localStorage["extension_enabled"] == 'undefined'){
@@ -6,8 +9,6 @@ if(typeof localStorage["extension_enabled"] == 'undefined'){
 	
 if(typeof localStorage["highlight_enabled"] == 'undefined'){
 	localStorage["highlight_enabled"] = "true";
-    
-	
 	console.log("localStorage['highlight_enabled']: "+localStorage["highlight_enabled"]);
 	}	
 
@@ -15,6 +16,28 @@ if(typeof localStorage["highlight_enabled"] == 'undefined'){
 initialiseSettings();
 
 console.log("Response DB: background element: attaching");
+
+
+function browser_event(rq,sender, sendResponse)
+{
+    console.log("back27: background.js browser_event", rq, sender);
+    // @@GLOBAL: possible collision?  or is the enclosure below of "options" safe?
+    var options = {sender:sender};
+    function rcvAllTabs(thetabs)
+    {
+        console.log("rcvAllTabs31:", thetabs, options);
+        _njn.send_callback_event("all_tabs",
+                                 { rq:rq,
+                                   all_tabs: thetabs
+                                 },
+                                 options);
+    }
+    var tabs = chrome.tabs.query(
+        {  },
+        rcvAllTabs
+        );
+    sendResponse({answer:true});
+}
 
 var listen_count = 0;
 var last_state = null;
@@ -94,7 +117,7 @@ _njn.listen(
 			{
 				//var a = window.open();
 				//a.document.body.innerHTML = "HELLO THERE";
-				console.log("back27: heard something!", rq)
+				console.log("back27: recieving _njn message==>", rq)
 				var cmd = rq.cmd;
 				if (cmd.indexOf("spider_") >= 0)
 				{
@@ -104,7 +127,10 @@ _njn.listen(
 				{
 					element_event(rq,sender,sendResponse);
 				} 
-				
+				else if (cmd.indexOf("browser_") >= 0)
+                {
+                    browser_event(rq, sender, sendResponse);
+                }
 				
 				
 			}

@@ -1,3 +1,5 @@
+var discussion_insertPoint = "#watch-discussion";
+console.log("Loaded insertlinks.js...");
 var app = {
 
 ytvideoid: '',
@@ -18,7 +20,7 @@ insertLinksInit: function() {
 	app.startIndex = 1;
 
 //var container = $("#watch-related");
-var container = $("#watch-discussion");
+var container = $(discussion_insertPoint);
 $(container).before("<div id='rdb_comments'></div>"); 
 $(container).before("<div id='rdb_comments_spacer'>&nbsp;</div>"); 
 var ytclcontainer = $("#rdb_comments");
@@ -50,6 +52,10 @@ $( "#rdb_arrow" ).click(function() {
   }
   
   
+var responder_container = $(responder_insertPoint);
+
+responder_container.before(responderEL);
+
 });
 
 

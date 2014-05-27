@@ -16,6 +16,7 @@
 // $.extend(jQuery.expr[':'],
 //     { regex : jqregex
 //     });
+CALLBACK_DEBUG = false;
 // novem.js
 consolelog = false;
 // @@DEFAULTS
@@ -1994,7 +1995,7 @@ function Novem() {
     				 id: 		id,
     				 };
     	
-    	console.log("nj1997: ", this.callback_register, this._callback_register);
+    	if (CALLBACK_DEBUG) console.log("nj1997: ", this.callback_register, this._callback_register);
     	this.callback_register[id] = cbobj;
     	
     	if  (cbstore)
@@ -2002,7 +2003,7 @@ function Novem() {
     		var callbacks = cbstore;
     		callbacks[id] = cbobj;
     	}
-    	console.log("this.callback_register", this.callback_register);
+    	if (CALLBACK_DEBUG) console.log("this.callback_register", this.callback_register);
     	cbdescription =  new CallbackDescription({name:name, id:id});
 		return cbdescription;    	
     }
@@ -2026,7 +2027,7 @@ function Novem() {
     	
     	var targetID = null;
     	message._client_callback_dict = callback_dict;
-    	console.log("nj2025: send options: (message, options)", message, options);
+    	if (CALLBACK_DEBUG) console.log("nj2025: send options: (message, options)", message, options);
     	if (options)
     	{
     		if (options.target_id)
@@ -2039,14 +2040,14 @@ function Novem() {
 			}
 		}
     	var complete = null;
-    	console.log("n2018: send", targetID, message, options);
+    	if (CALLBACK_DEBUG) console.log("n2018: send", targetID, message, options);
     	if (options && options.complete) 
     	{
     		complete = options.complete;
     	}
     	else
     	{
-    		complete = function (any){ console.log("nj2037: default function for: send complete", any)}
+    		complete = function (any){ if (CALLBACK_DEBUG) console.log("nj2037: default function for: send complete", any)}
     	}
     	
     	  //////
@@ -2054,7 +2055,7 @@ function Novem() {
         //////
     	if (!targetID && !options.broadcast)
     	{
-    		console.log("n2030: sendmessage w/no id");
+    		if (CALLBACK_DEBUG) console.log("n2030: sendmessage w/no id");
     		chrome.runtime.sendMessage( message, complete);
     	}
     	else
@@ -2075,7 +2076,7 @@ function Novem() {
 				}
 				else
 				{
-				console.log("n2035: sendmessage w/ targetID", targetID);
+				if (CALLBACK_DEBUG) console.log("n2035: sendmessage w/ targetID", targetID);
 				chrome.tabs.sendMessage( targetID, message, complete);
 				}
 			}
@@ -2087,7 +2088,7 @@ function Novem() {
     	var callback = options.callback;
     	if (callback)
     	{
-    		console.log("n1988: _njn.listen ", options);
+    		if (CALLBACK_DEBUG) console.log("n1988: _njn.listen ", options);
     		chrome.runtime.onMessage.addListener(callback);
     	}
     }
@@ -2098,7 +2099,7 @@ function Novem() {
       // THAT IS: if you call this and this.listen... the behavior is undefined. Maybe message
       // go both places and the response function will be called for one or the other
       // of the callbacks vs. based on order.      
-    	console.log("nj2068: callback listen"); 
+    	if (CALLBACK_DEBUG) console.log("nj2068: callback listen"); 
     	this.listen({ 	client: "callback_listen",
     					callback: this.callback_dispatch
     				});
@@ -2119,7 +2120,7 @@ function Novem() {
     	var funcname = msg.callback_name;
     	var cb_register = _njn.callback_register;
     	
-    	console.log("nj2067: idb_videoscan callback_dispatch (msg, cb_dict, cb_register)",
+    	if (CALLBACK_DEBUG) console.log("nj2067: idb_videoscan callback_dispatch (msg, cb_dict, cb_register)",
     				funcname, msg, cb_dict, cb_register);
     	
     	if (funcname in cb_dict)
@@ -2127,20 +2128,20 @@ function Novem() {
     		var funcid = cb_dict[funcname].id;
     		if (funcid)
     		{
-    			console.log("nj2080:", funcid, cb_register[funcid]);
+    			if (CALLBACK_DEBUG) console.log("nj2130:", funcid, cb_register[funcid]);
     			var func_ptr = cb_register[funcid].func_ptr;
     			
     			var eventID =  msg.event.rq.cmd + "." + msg.event.rq.func_name 
     							+ "." + msg.callback_name;
     			var cbname = msg.callback_name;
-    			console.log("nj2089:"+eventID);
+    			if (CALLBACK_DEBUG) console.log("nj2136:"+eventID);
     			switch (eventID)
     			{
     				// @@REFACTOR: I think this case should be in the spider.
     				case "element_curse.dbGetVideo.complete":
     				case "element_curse.dbGetVideo.gv_complete":
     					var video_morsel = msg.event.video_record;
-    					console.log("nj2135: idb_videoscan CBS", video_morsel);
+    					if (CALLBACK_DEBUG) console.log("nj2135: idb_videoscan CBS", video_morsel);
     					var video = rdb_spider.addVideo(video_morsel, true); // true == memonly
     					var callerobj = { 
     						videoID: video.get("video_id"),
@@ -2148,7 +2149,7 @@ function Novem() {
     						};
     					callerobj[cbname] = func_ptr;
     					
-    					console.log("nj2142: idb_videoscan CBS", callerobj, func_ptr);
+    					if (CALLBACK_DEBUG) console.log("nj2142: idb_videoscan CBS", callerobj, func_ptr);
     					//???
     					// here is where we call the callback as a result of the message
     					// without the 
@@ -2156,7 +2157,8 @@ function Novem() {
     					func_ptr.call(callerobj);
     					break;
     				default:
-    					console.log("unhandled: callback "+eventID);
+    					if (CALLBACK_DEBUG) console.log("unhandled: callback "+eventID, msg.event);
+                        func_ptr.call(null, msg.event);
     			}
     		}
     		
@@ -2168,7 +2170,7 @@ function Novem() {
    
     this.send_callback_event = function (callback_name, event, options)
     {
-    	console.log("nj2069: idb_videoscan send_callback_event (name,event,options)", "'"+callback_name+"'",event,options);
+    	if (CALLBACK_DEBUG) console.log("nj2069: idb_videoscan send_callback_event (name,event,options)", "'"+callback_name+"'",event,options);
     	this.send({ cmd: "callback_event",
     			  	callback_name: callback_name,
     			  	event: event
@@ -2707,7 +2709,7 @@ function Pod(pod_jq, target) {
                 data: pod_data,
                 success: function(data, tS, jqXHR)
                     {
-                        console.log("NV2113:"+data);
+                        if (CALLBACK_DEBUG) console.log("NV2113:"+data);
                         //data = JSON.parse(data);
                         var i = 0;
                         //c onsole.log("nj1403:");
@@ -2861,7 +2863,7 @@ function n9overlay(args)
         tcolor = "blue";
     }
     
-    console.log("nov2607:", args);
+    if (CALLBACK_DEBUG) console.log("nov2607:", args);
     var errorel = $("<div>",
                     {   css:
                             {   fontSize : 35,
@@ -2900,7 +2902,7 @@ function n9overlay(args)
                                 {   duration:"n9duration_mid",
                                     complete: function ()
                                         {
-                                            console.log("nv2677:", this, $(this));
+                                            if (CALLBACK_DEBUG) console.log("nv2677:", this, $(this));
                                             var durout = $(this).data("n9duration_out");
                                             $(this).fadeOut({  duration:1000,
                                                                 complete: function ()

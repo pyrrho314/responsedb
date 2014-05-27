@@ -385,6 +385,25 @@ N9Morsel.prototype = {
         {
             this.record.payload[key] = valuedict[key];
         }
+    },
+    putOnServer: function (options)
+    {
+        
+        var clean_record = JSON.stringify( this.prepareServerData());
+        var success = function(data){ console.log("putOnServer default success callback",this, data)}; 
+        var error   = function(data){ console.log("putOnServer default success callback",this, data)}; 
+        if (options)
+        {
+            if ("success" in options) success = options.success;
+            if ("error" in options) error = options.error;
+        }
+        $.ajax({
+                type: "POST",
+                url:  "http://novem9.com/morsels/morsel_save",
+                data: { morsel: clean_record },
+                success: success,
+                error: error
+                });
     }
 }
 
