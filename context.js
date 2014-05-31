@@ -12,4 +12,4 @@ if (href.indexOf("chrome-extension:") >=0)
     n9context = "background";
 }
 
-console.log("context.js: n9context =", n9context);
+console.log("context.js: n9context =", n9context, "for", href);

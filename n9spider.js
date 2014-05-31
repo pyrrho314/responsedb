@@ -1026,22 +1026,24 @@ function n9spider_yt_video_div(args)
     datestr = dateparts.join(" ");
     
     
-    // video ID element
-    newel.append($("<span>",
-						{text:video_id,
-					    	css:{ fontSize:"60%"
-					    		}
-					    }
-				  )
-				);
-	// datestring element
-    newel.append ($("<div>",
-                    {
-                        css:{fontSize:"90%",
-                             rightMargin:"10px"},
-                        html: datestr
-                    })
-                 );
+
+    ////////////////////
+    ///// 
+    //// video title
+    ///
+    //
+    newel.append ($("<a>", 
+                        {
+                            href: video.get("video_url"),
+                            text: video.get("title"),
+                            class: "title_link",
+                            css:{   fontSize:"110%",
+                                    fontWeight: "bold",
+                                    display:"block",
+                                }
+                        }
+                    )
+                  );
     ///////////////////
 	///// video thumbnail
 	//////////
@@ -1062,26 +1064,32 @@ function n9spider_yt_video_div(args)
                             html:"video by: <b>"+video.get("author_pretty")+"</b> ",
                             css:{   
                                     fontStyle:"italic",
-                                    fontSize:"70%"
-                                }
-                        }
-                    )
-                  );
-    newel.append ($("<br/>"));
-    newel.append ($("<span>", 
-                        {
-                            href: video.get("video_url"),
-                            text: video.get("title"),
-                            css:{   fontSize:"80%",
-                                    fontWeight: "bold"
+                                    fontSize:"100%"
                                 }
                         }
                     )
                   );
     
+        // video ID element
+    /*newel.append($("<span>",
+                        {text:video_id,
+                            css:{ fontSize:"60%"
+                                }
+                        }
+                  )
+                );
+    */
+    // datestring element
+    newel.append ($("<div>",
+                    {
+                        css:{fontSize:"90%",
+                             rightMargin:"10px"},
+                        html: datestr
+                    })
+                 );
     var vidid = video_id;
     newel.append( $("<div>",
-                        {   css: {fontSize:"50%"},
+                        {   css: {fontSize:"80%"},
                             text:"est. # comments: "
                                     + video.get("comments_count")
                         }
@@ -2624,7 +2632,7 @@ N9YTSpiderLib.prototype = {
     	if (content.indexOf(TRACKER_PHRASE) >=0)
     	{
     		tracker = true;
-    		console.log("spid2281:", content, extrainfo);
+    		console.log("spid2627:", content, extrainfo);
     	}
     	var genericVideoLinkTypes = rdbGenericVideoLinkTypes;
         var gen_extrainfo = {};
@@ -2633,7 +2641,7 @@ N9YTSpiderLib.prototype = {
             extrainfo = gen_extrainfo;
         };
     	var timestamp = extrainfo.timestamp ? extrainfo.timestamp: null;
-    	var source = extrainfo.source ? extrainfo.source: "unknown.checskTextForClues";
+    	var source = extrainfo.source ? extrainfo.source: "unknown.checkTextForClues";
     	console.log("spid2443:", source);
         if (!extrainfo.source)
     	{
@@ -2668,13 +2676,13 @@ N9YTSpiderLib.prototype = {
 			
 			var hasclue = regex.exec(content);
 			
-			//c/onsole.log("spid2296: hasclue", regex, hasclue);
+			console.log("spid2671: hasclue", regex, hasclue, content);
 			
 			if (hasclue)
 			{
 				if (true) //tracker)
 				{
-					console.log("spid2489: hasclue", hasclue);
+					console.log("spid2677: hasclue", hasclue);
 				}
 				var matches = content.match(regex);
                 if (true)
@@ -3282,11 +3290,12 @@ N9YTSpiderLib.prototype = {
 _yt_spiderlib = new N9YTSpiderLib();
 rdb_spider = _yt_spiderlib;
 
+// @@INCLUDE_ORDER this line requirs novem.js to be included first
 $("body").ready(function () 
 {
+    console.log("spid3294: spider: body_ready");
     _njn.register("get_spider", function ()
     {
         return _yt_spiderlib;
     });
-    _njn.callback_listen();
 });

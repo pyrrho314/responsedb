@@ -348,7 +348,12 @@ if (false) // THIS TURNED OFF FOR THE MOMENT
     switch(command)
     {
     case "comment_iframe":
-        $("body").ready( function () {convert2links()});
+        $("body").ready( 
+            function () {
+                            console.log("sR353: summarizeResponses: body_ready");
+                            convert2links()
+                        }
+                       );
         break;
 
 
@@ -360,6 +365,7 @@ if (false) // THIS TURNED OFF FOR THE MOMENT
 
         $("body").ready( function ()
             {
+                console.log("sR368: summarizeResponses: body_ready");
                 _njn.callback_listen();
             });
 

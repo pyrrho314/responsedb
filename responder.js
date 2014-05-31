@@ -1,14 +1,19 @@
 
 console.log("loading responder.... (n9context =", n9context+")", "comment =", command);
 var CONSOLELOG = true;
-
-var responder_insertPoint  = ".watch-sidebar-section";
+var RSPDR_DEBUG = true;
+//var responder_insertPoint  = [".watch-sidebar-section", ".watch-sidebar", ".watch", "#page", "#page-container", "body"];
+var responder_insertPoint  = [".watch-sidebar-section"];
 var urllabel,urlinput;
+var RESPONSE_BOX_CLASS = "responder_element";
+
 function add_response(responsecode)
 {
     console.log("rspdr9:", responsecode);
     rdb_spider.checkTextForClues(responsecode,
-        {   callback: function (a,b){
+        {   
+            source:"responder.add_response",
+            callback: function (a,b){
                 if (CONSOLELOG) console.log("rspdr11:", a,b);
                 n9spider_yt_videoscan(
                 {
@@ -50,8 +55,11 @@ function add_response(responsecode)
                                             type:"submit"
                                         });
                         tdiv.prepend("<br/>");
+                        tdiv.prepend("<br/>");
+
                         tdiv.prepend(cancel);
                         tdiv.prepend(confirm);
+                        
                         tdiv.hide()
                         
                         conf_div.append(tdiv);
@@ -204,23 +212,36 @@ function fill_taburl_select(ctrl, tabs)
     
     ctrl.append($("<option>",
                   { value: "+null+",
-                      text: "choose url from tabs"
+                      text: "choose url from tabs",
+                      css: {
+                            color:"#000060"
+                           }
                   }
                  )
                 );
     ctrl.append ($("<option>",
                   { value: "+refresh+",
-                    text: "refresh tab list"
+                    text: "refresh tab list",
+                    css: {
+                            color: "#006000"
+                        }
                   })
                 );
+    var urls = [];
     for (var index in subset)
     {
         var tab = subset[index];
         var title = tab.title;
         var url = tab.url;
+        //c onsole.log("rspdr224:", urls.indexOf(url), url, urls);
+        if (urls.indexOf(url) >= 0)
+        {
+            continue;
+        }
+        urls[urls.length] = url;
         var myurl = location.href;
         
-        if (url != myurl && (url.indexOf("watch")>0) )
+        if (url != myurl && (url.indexOf("watch")>=0) )
         {
             title = title.replace(" - YouTube", "");
             
@@ -362,26 +383,71 @@ function make_responder_div()
                         }
                 });
     linkdiv.append(rrd);
-    rrd.append($("<span>",
-                     {  class: "rdb_no_responses_div", 
-                         html: "<i>no responses</i>"
+    rrd.append($("<div>",
+                     {  class: "rdb_responses_title", 
+                         text: "no responses",
+                        css: {fontStyle: "italic" }
                      }));
     // build responderEL
     
+    var rtd = $("<div>",
+                {   class: "rdb_responseto_div",
+                    css:{   border:"solid #d0a0ff 1px",
+                            padding: "2px"
+                        }
+                });
+    rtd.append($("<div>",
+                     {  class: "rdb_responseto_title", 
+                         text: "responds to nothing",
+                        css: {fontStyle: "italic"}
+                     }));
+    
+    linkdiv.append(rtd);
     responderEL.append(responderTitle);
     responderEL.append(linkdiv);
     
     return responderEL;
 }
 
+function fix_responses_title ()
+{
+   // for responses_div
+   var rrd = $(".rdb_responses_div");
+   var rrt = rrd.find(".rdb_responses_title");
+   var cards = rrd.find(".video_card");
+   var numcards = cards.length;
+   if (numcards == 0)
+   {
+       rrt.text("&#8230 no responses &#8230");
+   }
+   else if (numcards == 1)
+   {
+       rrt.text("1 Response:");
+   }    
+   else if (numcards > 1)
+   {
+       rrt.text(numcards.toString()+" Responses:");
+   }
+   
+   // for responseto div
+   var rtd = $(".rdb_responseto_div");
+   var rtt = rrd.find(".rdb_responseto_title");
+   var rt_cards = rrd.find(".video_card");
+   var numrtcards = cards.length;
+   if (numrtcards == 0)
+   {
+       rtt.text("&#8230 responds to nothing &#8230");
+   }
+   else 
+   {
+       rtt.text("Responds to:");
+   }    
+}
 function add_response_div(video)
 {   // video: an N9Video
     
-    var rnrd = $(".rdb_no_responses_div");
-    if (rnrd.length >0)
-    {
-        rnrd.remove();
-    }
+    var rnrd = $(".rdb_responses_title");
+    
     console.log("rspdr427: got video", this, event);
     var vdiv = n9spider_yt_sidebar_video_div({n9video: video});
     var responses_div = $(".rdb_responses_div");
@@ -414,123 +480,237 @@ function add_response_div(video)
                     - parseFloat(vdiv.css("borderLeftWidth"))
                     - parseFloat(vdiv.css("borderRightWidth"));
     vdiv.find(".response_title").width(titlewide);
+    fix_responses_title();
     vdiv.slideDown();
 }
 
-if (n9context == "comment_bearing")
+function get_insert_point()
 {
-    $("body").ready ( function ()
+    var retval = null;
+    var tehwin = window;
+    //while (retval == null)
     {
-        var respip = $(responder_insertPoint);
-        t_r = respip
-        var respdiv = make_responder_div();
-        respip.prepend(respdiv);
-        var taburl = $(".taburl_select");
-        taburl.change(handle_taburl_change);
-        var urlinput = $("#responder_url");
-        urlinput.on("paste", paste_or_drop_url);
-        urlinput.on("drop", paste_or_drop_url);
-        urlinput.width(respip.innerWidth() - urllabel.width() - 18);
-        
-        var selinput = $($(".taburl_select")[0]);
-        selinput.width(respip.innerWidth() - 16);
-        urlinput.keyup(function (e) {
-                if (e.keyCode == 13) {
-                    paste_or_drop_url();
-                }
-            });
-        
-        console.log("rspdr392: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-        populate_taburl_select();
-        console.log("rspdr394: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-        var videoCLUE = rdb_spider.checkTextForClues(window.location.href);
-        
-        if (videoCLUE)
+        console.log("rspdr491:", tehwin);
+        for (i in responder_insertPoint)
         {
-            console.log("rspdr 395:", videoCLUE);
-        // look for responses from the server
-            var query = {
-                            "_obj.db_name"     : "spiderdb",
-                            "_obj.collect_name": "responses",
-                            "payload.targetID" : videoCLUE.videoID
-                        };
-            var data = {query: JSON.stringify(query)}
-            $.ajax({
-                        type: "POST",
-                        url : "http://novem9.com/morsels/morsel_find",
-                        data: data,
-                        success: function (data)
-                        {
-                            console.log("rspdr410:", this, data);
-                            if ("answer" in data && "morsels" in data["answer"])
-                            {
-                                var morsels = data["answer"]["morsels"];
-                                //
-                                // RESPONSES RESULT LOOP
-                                // 
-                                for (var i in morsels)
-                                {   // @@ALT: might be safter to wrap in N9Morsel obj and use getMorselVal
-                                    var response = morsels[i];
-                                    console.log("rspdr417:",response.payload.responseID,
-                                                "--->", response.payload.targetID);
-                                    var responseID = response.payload.responseID;
-                                    n9spider_yt_videoscan(
-                                        {
-                                            videoID: responseID,
-                                            n9complete: function (event)
-                                                {
-                                                    // can be replaced by add_response_div(this.n9video)
-                                                    var rnrd = $(".rdb_no_responses_div");
-                                                    if (rnrd.length >0)
-                                                    {
-                                                        rnrd.remove();
-                                                    }
-                                                    console.log("rspdr427: got video", this, event);
-                                                    var video = this.n9video;
-                                                    var vdiv = n9spider_yt_sidebar_video_div({n9video: video});
-                                                    var responses_div = $(".rdb_responses_div");
-                                                    responses_div.append(vdiv);
-                                                    
-                                                    console.log(responses_div.width(), 
-                                                                responses_div.css("borderLeftWidth"),
-                                                                responses_div.css("borderRightWidth"),
-                                                                responses_div.css("margin"),
-                                                                responses_div.css("padding"));
-                                                    
-                                                    var makewide =  responses_div.width() 
-                                                                  - parseFloat(responses_div.css("borderLeftWidth"))
-                                                                  - parseFloat(responses_div.css("borderRightWidth"))
-                                                                  - 2*parseFloat(responses_div.css("margin"))
-                                                                  - 2*parseFloat(responses_div.css("padding"));
-                                                    
-                                                    vdiv.width(makewide);
-                                                    
-                                                    console.log("vdiv --",
-                                                                vdiv.width(), 
-                                                                makewide,
-                                                                vdiv.css("borderLeftWidth"),
-                                                                vdiv.css("borderRightWidth"),
-                                                                vdiv.css("margin"),
-                                                                vdiv.css("padding"));
-                                                    
-                                                    var titlewide = vdiv.width() 
-                                                                  - parseFloat(vdiv.css("borderLeftWidth"))
-                                                                  - parseFloat(vdiv.css("borderRightWidth"));
-                                                    vdiv.find(".response_title").width(titlewide);
-                                                }
-                                        }
-                                    );
-                                }
-                            }
-                        },
-                        error: function (data)
-                        {
-                            console.log("rspdr414:", this, data);
-                        }
-                    
-                    }
-                  );
+            var ipstr = responder_insertPoint[i];
+            var ip = $(ipstr, window.document);
+            console.log("rspdr489:", ip.length, ipstr, ip);
+            if (ip.length>0 && retval == null)
+            {
+                retval = ip;
+            }
         }
-        
-    });
+            
+    }
+    return retval;
 }
+
+function please_insert_responsebox()
+{
+    var currespdiv = $("."+RESPONSE_BOX_CLASS);
+    if (currespdiv.length>0)
+    {
+        return;
+    }
+    var respip = get_insert_point();
+    console.log("rspdr430: respip =", respip);
+    if (!respip)
+    {
+        console.log("rspdr513: no insertion point found");
+        return;
+    }
+    var respdiv = make_responder_div();
+    respip.prepend(respdiv);
+    var taburl = $(".taburl_select");
+    taburl.change(handle_taburl_change);
+    var urlinput = $("#responder_url");
+    urlinput.on("paste", paste_or_drop_url);
+    urlinput.on("drop", paste_or_drop_url);
+    urlinput.width(respip.innerWidth() - urllabel.width() - 18);
+    
+    var selinput = $($(".taburl_select")[0]);
+    selinput.width(respip.innerWidth() - 16);
+    urlinput.keyup(function (e) {
+            if (e.keyCode == 13) {
+                paste_or_drop_url();
+            }
+        });
+    
+    populate_taburl_select();
+    var videoCLUE = rdb_spider.checkTextForClues(window.location.href);
+    
+    if (RSPDR_DEBUG) console.log("rspdr 457:", videoCLUE);
+    
+    if (videoCLUE)
+    {
+        // look for responses from the server
+        var query = {
+                        "_obj.db_name"     : "spiderdb",
+                        "_obj.collect_name": "responses",
+                        "payload.targetID" : videoCLUE.videoID
+                    };
+        var data = {query: JSON.stringify(query)}
+        $.ajax({
+                    type: "POST",
+                    url : "http://novem9.com/morsels/morsel_find",
+                    data: data,
+                    success: function (data)
+                    {
+                        console.log("rspdr410:", this, data);
+                        if ("answer" in data && "morsels" in data["answer"])
+                        {
+                            var morsels = data["answer"]["morsels"];
+                            //
+                            // RESPONSES RESULT LOOP
+                            // 
+                            for (var i in morsels)
+                            {   // @@ALT: might be safter to wrap in N9Morsel obj and use getMorselVal
+                                var response = morsels[i];
+                                console.log("rspdr417:",response.payload.responseID,
+                                            "--->", response.payload.targetID);
+                                var responseID = response.payload.responseID;
+                                n9spider_yt_videoscan(
+                                    {
+                                        videoID: responseID,
+                                        n9complete: function (event)
+                                            {
+                                                // can be replaced by add_response_div(this.n9video)
+                                                
+                                                console.log("rspdr427: got video", this, event);
+                                                var video = this.n9video;
+                                                var vdiv = n9spider_yt_sidebar_video_div({n9video: video});
+                                                var responses_div = $(".rdb_responses_div");
+                                                responses_div.append(vdiv);
+                                                
+                                                console.log(responses_div.width(), 
+                                                            responses_div.css("borderLeftWidth"),
+                                                            responses_div.css("borderRightWidth"),
+                                                            responses_div.css("margin"),
+                                                            responses_div.css("padding"));
+                                                
+                                                var makewide =  responses_div.width() 
+                                                                - parseFloat(responses_div.css("borderLeftWidth"))
+                                                                - parseFloat(responses_div.css("borderRightWidth"))
+                                                                - 2*parseFloat(responses_div.css("margin"))
+                                                                - 2*parseFloat(responses_div.css("padding"));
+                                                
+                                                vdiv.width(makewide);
+                                                
+                                                console.log("vdiv --",
+                                                            vdiv.width(), 
+                                                            makewide,
+                                                            vdiv.css("borderLeftWidth"),
+                                                            vdiv.css("borderRightWidth"),
+                                                            vdiv.css("margin"),
+                                                            vdiv.css("padding"));
+                                                
+                                                var titlewide = vdiv.width() 
+                                                                - parseFloat(vdiv.css("borderLeftWidth"))
+                                                                - parseFloat(vdiv.css("borderRightWidth"));
+                                                vdiv.find(".response_title").width(titlewide);
+                                                fix_responses_title();
+                                            }
+                                    }
+                                );
+                            }
+                        }
+                    },
+                    error: function (data)
+                    {
+                        console.log("rspdr414:", this, data);
+                    }
+                
+                }
+                );
+        
+        // look for vids this is a response TO from the server
+        query = {
+                        "_obj.db_name"     : "spiderdb",
+                        "_obj.collect_name": "responses",
+                        "payload.responseID" : videoCLUE.videoID
+                    };
+        data = {query: JSON.stringify(query)}
+        $.ajax({
+                    type: "POST",
+                    url : "http://novem9.com/morsels/morsel_find",
+                    data: data,
+                    success: function (data)
+                    {
+                        console.log("rspdr410:", this, data);
+                        if ("answer" in data && "morsels" in data["answer"])
+                        {
+                            var morsels = data["answer"]["morsels"];
+                            //
+                            // RESPONSES RESULT LOOP
+                            // 
+                            for (var i in morsels)
+                            {   // @@ALT: might be safter to wrap in N9Morsel obj and use getMorselVal
+                                var response = morsels[i];
+                                console.log("rspdr617:",response.payload.responseID,
+                                            "--->", response.payload.targetID);
+                                var targetID = response.payload.targetID;
+                                n9spider_yt_videoscan(
+                                    {
+                                        videoID: targetID,
+                                        n9complete: function (event)
+                                            {
+                                                // can be replaced by add_response_div(this.n9video)
+                                                
+                                                console.log("rspdr627: got video", this, event);
+                                                var video = this.n9video;
+                                                var vdiv = n9spider_yt_sidebar_video_div({n9video: video});
+                                                var responses_div = $(".rdb_responseto_div");
+                                                responses_div.append(vdiv);
+                                                
+                                                var makewide =  responses_div.width() 
+                                                                - parseFloat(responses_div.css("borderLeftWidth"))
+                                                                - parseFloat(responses_div.css("borderRightWidth"))
+                                                                - 2*parseFloat(responses_div.css("margin"))
+                                                                - 2*parseFloat(responses_div.css("padding"));
+                                                
+                                                vdiv.width(makewide);
+                                                
+                                                var titlewide = vdiv.width() 
+                                                                - parseFloat(vdiv.css("borderLeftWidth"))
+                                                                - parseFloat(vdiv.css("borderRightWidth"));
+                                                vdiv.find(".response_title").width(titlewide);
+                                                fix_responses_title();
+                                            }
+                                    }
+                                );
+                            }
+                        }
+                    },
+                    error: function (data)
+                    {
+                        console.log("rspdr414:", this, data);
+                    }
+                
+                }
+                );
+    }
+    
+}
+console.log("rspdr422:", n9context);
+//if (n9context == "comment_bearing")
+$("body").ready ( function () {
+            console.log("rspdr426: responder: body_ready");
+            please_insert_responsebox();
+        });
+
+function afterNavigate() {
+    //if ('/watch' === location.path) 
+    if (true)
+    {
+        please_insert_responsebox();
+    }
+}
+(document.body || document.documentElement).addEventListener('transitionend',
+  function(/*TransitionEvent*/ event) {
+    if (event.propertyName === 'width' && event.target.id === 'progress') {
+        afterNavigate();
+    }
+}, true);
+// After page load
+afterNavigate();

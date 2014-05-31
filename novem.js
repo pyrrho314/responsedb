@@ -2115,7 +2115,8 @@ function Novem() {
     	// used as a callback, thus doesn't actually have this set.
     	//console.log("nj2062: callback_dispatch rq,sender", rq, sender);
     	//console.log("nj2063: callback_register ", _njn.callback_register); //@HARDCODED: _njn (most are unmarked but it's a nice idea, isn't it? or... or... grep _njn?) 
-    	
+    	console.log("nj2118:callback_dispatch msg", msg);
+        
     	var cb_dict = msg.event.rq._client_callback_dict;
     	var funcname = msg.callback_name;
     	var cb_register = _njn.callback_register;

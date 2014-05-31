@@ -14,16 +14,21 @@
       "default_title":  "Keeps track of responses to videos."
    },
    "content_scripts": [ {
-      "css": ["summarizeResponses.css"], 
+      "css": [
+                "novem.css",
+                "summarizeResponses.css"
+             ], 
       "js": [   "jquery.js",
                 "jquery-ui.js",
                 "context.js",
                 "novem.js",
                 "morsels.js",
                 "n9spider.js",
+                "content_scripts.js",
                 "summarizeResponses.js",
                 "responder.js"],
-      "matches": [ "*://apis.google.com/*", "*://www.youtube.com/watch*", "*://www.youtube.com/all_comments*" ],
+      "matches": [  "*://www.youtube.com/*"
+                 ],
    	  "all_frames":true
    } ],
    "description": "This extension keeps track of the responses to the videos you have watched, recognized by links in comments. There is also a short set of commands that can precede the link to characterize the nature of the response.",
