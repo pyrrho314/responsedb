@@ -1,4 +1,19 @@
 {
+   "manifest_version": 2,
+   "name": "ResponderDB",
+   "version": "9.0.0.0",
+   "permissions": [ "tabs",
+                    "http://www.youtube.com/*", 
+                    "https://www.youtube.com/*", 
+                    "http://gdata.youtube.com/*", 
+                    "https://gdata.youtube.com/*",
+                    "http://novem9.com/*",
+                    "https://novem9.com/*",
+                    "*://apis.google.com/*",
+                    "*://*.novem9.org/"
+                  ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "web_accessible_resources": [ "ajax-loader.gif", "icon48.png", "icon128.png","icon.png", "arrowUp.png", "arrowDown.png" ],
 	 "background": {
       "scripts": [ "jquery.js", 
       				"context.js",
@@ -36,20 +51,5 @@
       "128": "icon128.png",
       "16": "icon16.png",
       "48": "icon48.png"
-   },
-   "manifest_version": 2,
-   "name": "ResponderDB",
-   "permissions": [ "tabs",
-   					"http://www.youtube.com/*", 
-   					"https://www.youtube.com/*", 
-   					"http://gdata.youtube.com/*", 
-   					"https://gdata.youtube.com/*",
-   					"http://novem9.com/*",
-   					"https://novem9.com/*",
-   					"*://apis.google.com/*",
-   					"*://*.novem9.org/"
-   				  ],
-   "update_url": "https://clients2.google.com/service/update2/crx",
-   "version": "9.0.0.0",
-   "web_accessible_resources": [ "ajax-loader.gif", "icon48.png", "icon128.png","icon.png", "arrowUp.png", "arrowDown.png" ]
+   }
 }

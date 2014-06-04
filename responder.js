@@ -314,7 +314,7 @@ function make_responder_div()
                             },
                         "class":"responder_element",
                         "id": "RDB_main_responder_element",
-                        
+                        "made_for": window.location.href
                     });
     var responderTitle = $("<div>",
                            {css: {  borderBottom:"solid #d0d0f0 2px",
@@ -392,14 +392,16 @@ function make_responder_div()
     
     var rtd = $("<div>",
                 {   class: "rdb_responseto_div",
-                    css:{   border:"solid #d0a0ff 1px",
+                    css:{   border:"solid #FF9090 1px",
                             padding: "2px"
                         }
                 });
     rtd.append($("<div>",
                      {  class: "rdb_responseto_title", 
                          text: "responds to nothing",
-                        css: {fontStyle: "italic"}
+                        css: {fontStyle: "italic",
+                                color: "#ff9090"
+                        }
                      }));
     
     linkdiv.append(rtd);
@@ -431,18 +433,19 @@ function fix_responses_title ()
    
    // for responseto div
    var rtd = $(".rdb_responseto_div");
-   var rtt = rrd.find(".rdb_responseto_title");
-   var rt_cards = rrd.find(".video_card");
-   var numrtcards = cards.length;
+   var rtt = rtd.find(".rdb_responseto_title");
+   var rt_cards = rtd.find(".video_card");
+   var numrtcards = rt_cards.length;
    if (numrtcards == 0)
    {
-       rtt.text("&#8230 responds to nothing &#8230");
+       rtt.html("&#8230 responds to nothing &#8230");
    }
    else 
    {
        rtt.text("Responds to:");
    }    
 }
+
 function add_response_div(video)
 {   // video: an N9Video
     
@@ -509,16 +512,27 @@ function get_insert_point()
 function please_insert_responsebox()
 {
     var currespdiv = $("."+RESPONSE_BOX_CLASS);
+    var tehref = window.location.href;
     if (currespdiv.length>0)
     {
-        return;
+        console.log("rspdr517:", tehref, currespdiv.prop("made_for"));
+        if (tehref == currespdiv.prop("made_for"))
+        {
+            return 1; // 
+        }
+        else
+        {
+            return 0; // sometimes we're asked to insert a div, when there is already a div
+                      // but if it is not made for this href, then the call has come before
+                      // after the pushState but before erasing the page's current contents.
+        }
     }
     var respip = get_insert_point();
     console.log("rspdr430: respip =", respip);
     if (!respip)
     {
         console.log("rspdr513: no insertion point found");
-        return;
+        return null;
     }
     var respdiv = make_responder_div();
     respip.prepend(respdiv);
@@ -690,8 +704,29 @@ function please_insert_responsebox()
                 }
                 );
     }
+    return 2; // means "hopefully working"
     
 }
+
+function poll_to_insert(iteration)
+{
+    if (typeof(iteration) == "undefined")
+    {
+        iteration = 10;
+    }
+    var worked = please_insert_responsebox();
+    console.log("rspdr707: iteration =", iteration);
+    console.log("rspdr708: worked =", worked);
+    if (!worked && iteration>0)
+    {
+        iteration--;
+        setTimeout( function ()
+        {
+            poll_to_insert(iteration);
+        }, 1000);
+    }    
+}
+
 console.log("rspdr422:", n9context);
 //if (n9context == "comment_bearing")
 $("body").ready ( function () {
@@ -699,6 +734,33 @@ $("body").ready ( function () {
             please_insert_responsebox();
         });
 
+//this works... but at start of event
+$(document).click(function() {
+    // @@KLUDGE @@NOTE
+    // due to the fact that youtube doesn't actually load a new page, often
+    // when the user clicks on a link, but uses pushState. Thus, after a click we check for a
+    // while to see if the responses div is still there.
+    console.log("rspdr724: document click");
+    var currespdiv = $("."+RESPONSE_BOX_CLASS);
+    console.log("rspdr735: ckc", currespdiv.prop("click_kludge_click"));
+    if (currespdiv.length >0)
+    {
+        currespdiv.prop("click_kludge_click", true);
+    }
+    console.log("rspdr737: ckc", currespdiv.prop("click_kludge_click"));
+    setTimeout(poll_to_insert, 500);
+});
+
+/*var html = "window.history.pushState = function(a,b,c) { alert('Change !'); };";
+
+var headID = document.getElementsByTagName("head")[0];         
+var newScript = document.createElement('script');
+newScript.type = 'text/javascript';
+newScript.innerHTML = html;
+headID.appendChild(newScript);
+*/
+
+/*
 function afterNavigate() {
     //if ('/watch' === location.path) 
     if (true)
@@ -707,10 +769,11 @@ function afterNavigate() {
     }
 }
 (document.body || document.documentElement).addEventListener('transitionend',
-  function(/*TransitionEvent*/ event) {
-    if (event.propertyName === 'width' && event.target.id === 'progress') {
-        afterNavigate();
+  function( event) {
+    console.log("rspdr728: ",event);
+        
+      if (event.propertyName === 'width' && event.target.id === 'progress') {
+        //afterNavigate();
     }
 }, true);
-// After page load
-afterNavigate();
+*/
