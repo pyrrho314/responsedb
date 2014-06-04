@@ -1,0 +1,6 @@
+a.title_link { color:black;
+}
+a.title_link:hover {
+             text-decoration: none;
+             color:blue;
+}
