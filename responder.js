@@ -321,7 +321,7 @@ function make_responder_div()
                                     fontSize:"15px"
                                  },
                            "class":"responder_title",
-                           "text": "Response Box"
+                           "text": "Video Response Box"
                            });
     var iconURL = chrome.extension.getURL("icon48.png");
     var img =  $("<img>",
@@ -385,7 +385,7 @@ function make_responder_div()
     linkdiv.append(rrd);
     rrd.append($("<div>",
                      {  class: "rdb_responses_title", 
-                         text: "no responses",
+                         html: "&#8230 no responses &#8230",
                         css: {fontStyle: "italic" }
                      }));
     // build responderEL
@@ -398,7 +398,7 @@ function make_responder_div()
                 });
     rtd.append($("<div>",
                      {  class: "rdb_responseto_title", 
-                         text: "responds to nothing",
+                         html: "&#8230 not a response &#8230",
                         css: {fontStyle: "italic",
                                 color: "#ff9090"
                         }
@@ -420,7 +420,7 @@ function fix_responses_title ()
    var numcards = cards.length;
    if (numcards == 0)
    {
-       rrt.text("&#8230 no responses &#8230");
+       rrt.html("&#8230 no responses &#8230");
    }
    else if (numcards == 1)
    {
@@ -438,11 +438,15 @@ function fix_responses_title ()
    var numrtcards = rt_cards.length;
    if (numrtcards == 0)
    {
-       rtt.html("&#8230 responds to nothing &#8230");
+       rtt.html("&#8230 not a response &#8230");
    }
-   else 
+   else  if  (numrtcards == 1)
    {
-       rtt.text("Responds to:");
+       rtt.text("Responds to 1 video");
+   }
+   else
+   {
+       rtt.text("Responds to "+numrtcards.toString()+" videos");
    }    
 }
 
@@ -535,7 +539,7 @@ function please_insert_responsebox()
         return null;
     }
     var respdiv = make_responder_div();
-    respip.prepend(respdiv);
+    $(respip[0]).prepend(respdiv);
     var taburl = $(".taburl_select");
     taburl.change(handle_taburl_change);
     var urlinput = $("#responder_url");

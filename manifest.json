@@ -1,7 +1,17 @@
 {
    "manifest_version": 2,
    "name": "ResponderDB",
-   "version": "9.0.0.0",
+   "short_name":"d.t",
+   "author": "mcwcam",
+   "version": "9.0.0.2",
+   
+   "description":"ResponseDB Chrome Extension allows responding to youtube videos with other videos. A discourse technology.", 
+   "icons": {
+      "128": "icon128.png",
+      "16": "icon16.png",
+      "48": "icon48.png"
+   },
+   
    "permissions": [ "tabs",
                     "http://www.youtube.com/*", 
                     "https://www.youtube.com/*", 
@@ -45,11 +55,6 @@
       "matches": [  "*://www.youtube.com/*"
                  ],
    	  "all_frames":true
-   } ],
-   "description": "This extension keeps track of the responses to the videos you have watched, recognized by links in comments. There is also a short set of commands that can precede the link to characterize the nature of the response.",
-   "icons": {
-      "128": "icon128.png",
-      "16": "icon16.png",
-      "48": "icon48.png"
-   }
+   } ]
+   
 }
