@@ -1,0 +1,7 @@
+#/bin/bash
+
+THEDATE=$(date +"%Y-%b-%d") 
+
+zip responsedb-$THEDATE *
+
+mv responsedb-$THEDATE.zip ..
