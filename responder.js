@@ -71,7 +71,14 @@ function add_response(responsecode)
                     n9error: function (event)
                     {
                         console.log("rspdr57:", this, event);
-                        alert("Error confirming.  This is an ANNOYING POPUP LEVEL errror.");
+                        //alert("Error confirming.  This is an ANNOYING POPUP LEVEL errror.");
+                        n9overlay({
+                            msg:"<br/>confirmation error, video may be private or unavailable",
+                            duration_mid: 3000,
+                            duration_out: 4000,
+                            text_color: "yellow"
+                        });
+                        
                         empty_confirm_div();
                     }
                 }

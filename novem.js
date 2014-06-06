@@ -2885,7 +2885,9 @@ function n9overlay(args)
     {
         errorel.append ( $("<div>", { html: args.msg }) );
     }
-    $(".novem_all").append(errorel);
+    //$(".novem_all").append(errorel);
+    $("body").append(errorel);
+    
     var duration_in = args.duration_in ? args.duration_in: 500;
     errorel.data("n9duration_in", duration_in);
     var duration_mid = args.duration_mid ? args.duration_mid: 3000;

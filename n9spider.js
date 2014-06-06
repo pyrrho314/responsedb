@@ -835,10 +835,31 @@ function n9spider_yt_scanall(map)
     return;
 }
 
+function n9_seconds_to_hms(seconds)
+{
+    var secondsPerHour = 60*60;
+    var secondsPerMinute = 60;
+    var hours = parseInt(seconds/secondsPerHour);
+    var secwohrs = seconds - hours*secondsPerHour;
+    var mins = parseInt(secwohrs/secondsPerMinute);
+    var remaindersecs = seconds - hours*secondsPerHour - mins*secondsPerMinute;
+    
+    var hourspart = hours.toString()+"h";
+    var minspart  = mins.toString()+"m";
+    if (minspart.length == 1) { minspart = "0"+minspart;}
+    var secspart  = remaindersecs.toString()+"s";
+    if (secspart.length ==1) {secspart = "0"+secspart;}
+    
+    var hms = "";
+    
+    if (hours > 0) hsm = hourspart+":"
+    hms = hms+minspart+":";
+    hms = hms+secspart;
+    return hms;
+}
 function n9spider_yt_sidebar_video_div(args)
 {
     var video = 0;
-    
     if ("n9_video" in args)
     { //@@ARGS: n9_video == n9video
         video = args.n9_video;
@@ -848,6 +869,7 @@ function n9spider_yt_sidebar_video_div(args)
         video = args.n9video;
     }//c/onsole.log("spid163: args videodiv");
     //c/onsole.log(args);
+    var video_duration = video.get("duration");
     var post_date = video.get("post_date");
     var video_id = video.get("video_id");
     //var post_date = args.n9_video.get("post_date");
@@ -922,6 +944,20 @@ function n9spider_yt_sidebar_video_div(args)
                         {   padding: "3px",
                         }
                     });
+    //duration
+    infobox.append($("<br>"));
+    infobox.append ($("<span>", 
+                        {
+                            href: video.get("video_url"),
+                            html:"video duration: <b>"+n9_seconds_to_hms(video.get("duration"))+"</b> ",
+                            css:{   
+                                    fontStyle:"italic",
+                                    fontSize:"80%"
+                                }
+                        }
+                    )
+                  );
+    
     //// video author
     infobox.append($("<br>"));
     infobox.append ($("<span>", 
