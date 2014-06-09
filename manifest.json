@@ -1,6 +1,6 @@
 {
    "manifest_version": 2,
-   "name": "ResponderDB",
+   "name": "The Responder",
    "short_name":"d.t",
    "author": "mcwcam",
    "version": "9.0.271.2",
@@ -13,7 +13,7 @@
    },
    
    "permissions": [ 
-                    "identity"
+                    "identity",
                     "tabs",
                     "http://www.youtube.com/*", 
                     "https://www.youtube.com/*", 
@@ -28,6 +28,7 @@
 	 "background": {
       "scripts": [ "jquery.js", 
       				"context.js",
+      				"config/extension_context.js",
       				"novem.js", 
       				"morsels.js",
       				"n9spider.js",
@@ -46,6 +47,7 @@
              ], 
       "js": [   "jquery.js",
                 "jquery-ui.js",
+                "config/extension_context.js",
                 "context.js",
                 "novem.js",
                 "morsels.js",

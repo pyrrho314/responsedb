@@ -111,6 +111,15 @@ function element_event(rq,sender, sendResponse)
 	sendResponse( answer );				
 }
 
+console.log("back114: n9_operation_mode", n9_operation_mode);
+
+if (n9_operation_mode == "DEVELOPMENT")
+{
+    chrome.browserAction.setIcon({
+            path: "icon-devel.png"
+            });
+}
+
 _njn.listen(
 	{ callback: 
 			function (rq, sender, sendResponse)

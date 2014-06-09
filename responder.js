@@ -7,6 +7,8 @@ var responder_insertPoint  = [".watch-sidebar-section"];
 var urllabel,urlinput;
 var RESPONSE_BOX_CLASS = "responder_element";
 
+n9url = n9_novemserver_url_use; //"http://localhost"
+
 function add_response(responsecode)
 {
     console.log("rspdr9:", responsecode);
@@ -103,7 +105,7 @@ function confirm_response(msg)
     console.log("rspdr82:", json_morsel);
     $.ajax({
             type:"POST",
-            url:"http://novem9.com/morsels/morsel_save",
+            url: n9url + "/morsels/morsel_save",
             data: { morsel: json_morsel
                   },
             success: function (data) {console.log("rspdr86:success", data);},
@@ -325,8 +327,8 @@ function make_responder_div()
                     });
     var responderTitle = $("<div>",
                            {css: {  borderBottom:"solid #d0d0f0 2px",
-                                    fontSize:"15px"
-                                 },
+                                    fontSize:"15px",
+                                    },
                            "class":"responder_title",
                            "text": "Video Response Box"
                            });
@@ -337,6 +339,7 @@ function make_responder_div()
                     css: {display:"table-cell",
                           float:"left",
                           height: "16px",
+                            marginRight:"2px"
                             }
                 });
     
@@ -578,7 +581,7 @@ function please_insert_responsebox()
         var data = {query: JSON.stringify(query)}
         $.ajax({
                     type: "POST",
-                    url : "http://novem9.com/morsels/morsel_find",
+                    url : n9url + "/morsels/morsel_find",
                     data: data,
                     success: function (data)
                     {
@@ -658,7 +661,7 @@ function please_insert_responsebox()
         data = {query: JSON.stringify(query)}
         $.ajax({
                     type: "POST",
-                    url : "http://novem9.com/morsels/morsel_find",
+                    url : n9url + "/morsels/morsel_find",
                     data: data,
                     success: function (data)
                     {
@@ -738,11 +741,14 @@ function poll_to_insert(iteration)
     }    
 }
 
-console.log("rspdr422:", n9context);
+//c/onsole.log("rspdr422:", n9context);
 //if (n9context == "comment_bearing")
 $("body").ready ( function () {
-            console.log("rspdr426: responder: body_ready");
+            console.log("rspdr744: responder: body_ready");
             please_insert_responsebox();
+            
+            console.log("rspdr747:", n9url);
+            
         });
 
 //this works... but at start of event

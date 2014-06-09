@@ -399,7 +399,7 @@ N9Morsel.prototype = {
         }
         $.ajax({
                 type: "POST",
-                url:  "http://novem9.com/morsels/morsel_save",
+                url:  n9_novemserver_url_use + "/morsels/morsel_save",
                 data: { morsel: clean_record },
                 success: success,
                 error: error
