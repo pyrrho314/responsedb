@@ -1,6 +1,6 @@
 #/bin/bash
 
-THEDATE=$(date +"%Y-%b-%d_%h-%M") 
+THEDATE=$(date +"%Y-%b-%d_%H-%M") 
 
 zip responsedb-$THEDATE * config/*
 
