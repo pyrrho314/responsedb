@@ -1,6 +1,6 @@
 n9_extension_context = { 
+    "development_mode": "http://localhost", // development_mode sets an alternate novemserver_url... other setting ignored
     "novemserver_url" : "http://discourse.technology",
-    //"development_mode": "http://localhost",
     "relative_mode": false
 };
 

@@ -741,16 +741,104 @@ function poll_to_insert(iteration)
     }    
 }
 
-//c/onsole.log("rspdr422:", n9context);
-//if (n9context == "comment_bearing")
-$("body").ready ( function () {
-            console.log("rspdr744: responder: body_ready");
-            please_insert_responsebox();
-            
-            console.log("rspdr747:", n9url);
-            
-        });
 
+//
+// OAuth/Google Auth/Youtube API
+//
+// Enter a client ID for a web application from the Google Developer Console.
+// https://google-api-javascript-client.googlecode.com/hg/samples/authSample.html
+// In your Developer Console project, add a JavaScript origin that corresponds to the domain
+// where you will be running the script.
+// chrome app var clientId = '519722419336-bjvdk0b5nqird4bq6io85kj9v91m4i6i.apps.googleusercontent.com';
+var clientId = "519722419336-871k22v80i3t9j70i76gft8tru4c2oqh.apps.googleusercontent.com";
+
+// Enter the API key from the Google Develoepr Console - to handle any unauthenticated
+// requests in the code.
+// The provided key works for this sample only when run from
+// https://google-api-javascript-client.googlecode.com/hg/samples/authSample.html
+// To use in your own application, replace this API key with your own.
+var apiKey = "AIzaSyD7izW1_V9_1cQjr6Ki3cH7et_5pfhEXfc";
+
+// To enter one or more authentication scopes, refer to the documentation for the API.
+// var scopes = 'https://www.googleapis.com/auth/plus.me';
+var scopes = 'https://www.googleapis.com/auth/youtube';
+
+// Use a button to handle authentication the first time.
+function handleClientLoad() {
+    console.log("rspdr768 handleClientLoad");
+gapi.client.setApiKey(apiKey);
+window.setTimeout(checkAuth,1);
+}
+
+function checkAuth() {
+gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: true}, handleAuthResult);
+}
+
+
+function handleAuthResult(authResult) {
+var authorizeButton = document.getElementById('authorize-button');
+var logoutButton = document.getElementById("logout-button");
+var infoButton = document.getElementById("info-button");
+infoButton.onclick = handleInfoClick;
+console.log("ga83: authResult =", authResult);
+
+if (authResult && !authResult.error) {
+    console.log("ga86: auth success");
+    authorizeButton.style.visibility = 'hidden';
+    logoutButton.style.visibility = '';
+    logoutButton.onclick = handleLogoutClick;
+    makeApiCall();
+} else {
+    console.log("ga92: auth failure");
+    authorizeButton.style.visibility = '';
+    logoutButton.style.visibility = '';
+    authorizeButton.onclick = handleAuthClick;
+}
+}
+
+function handleAuthClick(event) {
+gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: false}, handleAuthResult);
+return false;
+}
+function handleLogoutClick(event)
+{
+console.log("ga105: signOut()");
+gapi.auth.signOut();
+}
+function handleInfoClick(event)
+{
+console.log("ga109: gapi.auth", gapi.auth);
+}
+
+// Load the API and make an API call.  Display the results on the screen.
+function makeApiCall() {
+gapi.client.load('youtube', 'v3', function(a,b,c) {
+    console.log("youtube API loaded");
+    })
+/*gapi.client.load('plus', 'v1', function() {
+    var request = gapi.client.plus.people.get({
+    'userId': 'me'
+    });
+    request.execute(function(resp) {
+    console.log("ga101:", resp);
+    return;
+    var heading = document.createElement('h4');
+    var image = document.createElement('img');
+    image.src = resp.image.url;
+    heading.appendChild(image);
+    heading.appendChild(document.createTextNode(resp.displayName));
+
+    document.getElementById('content').appendChild(heading);
+    });
+});*/
+}
+$("body").ready( function () {
+    handleClientLoad();
+    
+});
+
+/// OAUTH END
+    
 //this works... but at start of event
 $(document).click(function() {
     // @@KLUDGE @@NOTE
