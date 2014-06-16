@@ -23,7 +23,7 @@
                     "http://apis.google.com/",
                     "https://apis.google.com/",
                     "http://discourse.technology/*",
-                    "http://localhost/*"
+                    "http://localhost/*",
                     "https://discourse.technology/*",
                     "https://localhost/*"
                   ],
@@ -50,8 +50,7 @@
                 "novem.css",
                 "summarizeResponses.css"
              ], 
-      "js": [   "https://apis.google.com/js/client.js?onload=load",
-                "jquery.js",
+      "js": [   "jquery.js",
                 "jquery-ui.js",
                 "config/extension_context.js",
                 "context.js",
