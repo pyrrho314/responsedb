@@ -1,10 +1,10 @@
 {
    "manifest_version": 2,
-   "name": "The Responder",
+   "name": "Backatcha",
    "short_name":"d.t",
    "author": "mcwcam",
-   "version": "9.0.271.4",
-   "content_security_policy": "script-src 'self' 'unsafe-eval' https://apis.google.com; object-src 'self' 'unsafe-eval' https://apis.google.com;",
+   "version": "9.0.271.7",
+   "content_security_policy": "script-src 'self' 'unsafe-eval' https://apis.google.com ; object-src 'self' 'unsafe-eval' https://apis.google.com;",
       
    "description":"ResponseDB Chrome Extension allows responding to youtube videos with other videos. A discourse technology.", 
    "icons": {
@@ -31,8 +31,8 @@
    "web_accessible_resources": [ "ajax-loader.gif", "icon48.png", "icon128.png","icon.png", "arrowUp.png", "arrowDown.png" ],
 	 "background": {
       "scripts": [  
-                    "jquery.js", 
-      				"context.js",
+                    "jquery.js",
+                    "context.js",
       				"config/extension_context.js",
       				"novem.js", 
       				"morsels.js",
@@ -48,9 +48,12 @@
    "content_scripts": [ {
       "css": [
                 "novem.css",
+                "rickshaw.css",
                 "summarizeResponses.css"
              ], 
       "js": [   "jquery.js",
+                "d3.js",
+                "rickshaw.js",
                 "jquery-ui.js",
                 "config/extension_context.js",
                 "context.js",

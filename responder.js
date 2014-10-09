@@ -1,3 +1,14 @@
+/**
+ * @author       Rob W <gwnRob@gmail.com>
+ * @website      http://stackoverflow.com/a/7513356/938089
+ * @version      20131010
+ * @description  Executes function on a framed YouTube video (see website link)
+ *               For a full list of possible functions, see:
+ *               https://developers.google.com/youtube/js_api_reference
+ * @param String frame_id The id of (the div containing) the frame
+ * @param String func     Desired function to call, eg. "playVideo"
+ *        (Function)      Function to call when the player is ready.
+ * @param Array  args     (optional) List of arguments to pass to function func*/
 
 console.log("loading responder.... (n9context =", n9context+")", "comment =", command);
 var CONSOLELOG = true;
@@ -313,13 +324,92 @@ function paste_or_drop_url(event)
     }, 100);
 }
 
+function make_instant_response_div()
+{
+    var instantEL = $("<div>",
+                    {
+                        css: {  border: "solid #d0d0d0 2px",
+                                margin: "2px",
+                                padding: "0px",
+                                backgroundColor: "#dffff3"
+                            },
+                        "class":"instant_response_element",
+                        "id": "RDB_instant_response_element",
+                        "made_for": window.location.href
+                    });
+    var instantTitle = $("<div>",
+                           {css: {  borderBottom:"solid #d0d0f0 2px",
+                                    fontSize:"15px",
+                                    fontWeight: "bold",
+                                    backgroundColor:"#d3daf0",
+                                    //height:"500px"
+                                    },
+                           "class":"instant_response_title",
+                           "text": "Instant Response Tool"
+                           });
+    var iconURL = chrome.extension.getURL("icon48.png");
+    var img =  $("<img>",
+                {
+                    src: iconURL,
+                    css: {//display:"table-cell",
+                          //float:"left",
+                          height: "16px",
+                          marginRight:"2px"
+                         }
+                });
+    
+    instantTitle.prepend(img);
+    instantEL.append(instantTitle);
+    irgraph = $("<div id='ir_graph'></div>");
+    instantEL.append(irgraph);
+    irgraph.ready( function () { 
+            var vis = d3.select("#ir_graph").append("svg");
+            //var w = 200,h = 200;
+            //vis.attr("width",w);
+            //vis.attr("height",  h);
+            //vis.text("Me Likey Graph").select("#ir_graph");
+            console.log("rspdr371:", $(this).width());
+            var w = 300; //$(this).width();
+            var h = 200; //$(this).height();
+            
+            var graph = new Rickshaw.Graph({
+                    element: document.querySelector("#ir_graph"),
+                    width: w,
+                    height: h,
+                    renderer: 'bar',
+                    series: [{
+                            data: [ { x: 0, y: 40 }, 
+                                    { x: 1, y: 49 },
+                                    { x: 2, y: 29 },
+                                    { x: 3, y: 39 }
+                                  ],
+                            color: 'steelblue'
+                    }]
+                });
+                graph.render();
+            }
+        )
+
+    /* this test of getting the  youtube html5 player worked
+    setTimeout( function ()
+        {
+            var play = $("video")[0];
+            console.log("rspdr519:",play);
+            play.currentTime = 240;
+            play.pause();
+        }, 5000);
+    */
+    
+    return instantEL;
+}
 function make_responder_div()
 {
     var responderEL = $("<div>",
                     {
                         css: {  border: "solid #d0d0d0 2px",
                                 margin: "2px",
-                                padding: "0px"
+                                padding: "0px",
+                                backgroundColor: "#dffff3"
                             },
                         "class":"responder_element",
                         "id": "RDB_main_responder_element",
@@ -328,6 +418,9 @@ function make_responder_div()
     var responderTitle = $("<div>",
                            {css: {  borderBottom:"solid #d0d0f0 2px",
                                     fontSize:"15px",
+                                    fontWeight: "bold",
+                                    backgroundColor:"#d3daf0",
+                                    //height:"500px"
                                     },
                            "class":"responder_title",
                            "text": "Video Response Box"
@@ -336,21 +429,22 @@ function make_responder_div()
     var img =  $("<img>",
                 {
                     src: iconURL,
-                    css: {display:"table-cell",
-                          float:"left",
+                    css: {//display:"table-cell",
+                          //float:"left",
                           height: "16px",
-                            marginRight:"2px"
-                            }
+                          marginRight:"2px"
+                         }
                 });
     
     responderTitle.prepend(img);
-    responderTitle.append("<br clear='all'>");
+    //responderTitle.append("<br >");
     
     var linkdiv = $("<div>",
                     {css: {border:"1px",
                             paddingTop: "2px",
                             paddingBottom: "2px"
-                    }}
+                          }
+                    }
                     );
     urllabel = $("<span>",
                      {  css: {
@@ -417,7 +511,22 @@ function make_responder_div()
     linkdiv.append(rtd);
     responderEL.append(responderTitle);
     responderEL.append(linkdiv);
-    
+    /* this test of getting the  youtube html5 player worked
+    setTimeout( function ()
+        {
+            var play = $("video")[0];
+            console.log("rspdr519:",play);
+            play.currentTime = 240;
+            play.pause();
+        }, 5000);
+    /*
+    /*
+    onYouTubeIframeAPIReady(function ()
+                                {
+                                    alert("RSPDR425:");
+                                }
+                            );
+    */
     return responderEL;
 }
 
@@ -550,6 +659,9 @@ function please_insert_responsebox()
     }
     var respdiv = make_responder_div();
     $(respip[0]).prepend(respdiv);
+    var instdiv = make_instant_response_div();
+    $(respip[0]).prepend(instdiv);
+    
     var taburl = $(".taburl_select");
     taburl.change(handle_taburl_change);
     var urlinput = $("#responder_url");

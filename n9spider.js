@@ -906,7 +906,11 @@ function n9spider_yt_sidebar_video_div(args)
         $("<img>", 
         {   src : video.get("thumbnail"),
             width:"100px",
-            css: {padding:"5px",float:"right"}
+            css: {  display:"block", 
+                    position: "absolute", 
+                    padding:"5px",
+                    // float:"right"
+                 }
         })
         );
     
@@ -946,13 +950,21 @@ function n9spider_yt_sidebar_video_div(args)
                     });
     //duration
     infobox.append($("<br>"));
+    infobox.append ($("<style>"
+                      + "   .vinfo { margin-left: 110px}"
+                      + "</style>"));
+
+
+
     infobox.append ($("<span>", 
                         {
                             href: video.get("video_url"),
+                            class: "vinfo",
                             html:"video duration: <b>"+n9_seconds_to_hms(video.get("duration"))+"</b> ",
                             css:{   
                                     fontStyle:"italic",
-                                    fontSize:"80%"
+                                    fontSize:"80%",
+                                    //marginLeft: "110px"
                                 }
                         }
                     )
@@ -962,6 +974,7 @@ function n9spider_yt_sidebar_video_div(args)
     infobox.append($("<br>"));
     infobox.append ($("<span>", 
                         {
+                            class: "vinfo",
                             href: video.get("video_url"),
                             html:"video by: <b>"+video.get("author_pretty")+"</b> ",
                             css:{   
@@ -979,7 +992,8 @@ function n9spider_yt_sidebar_video_div(args)
     datestr = dateparts.join(" ");
     infobox.append ($("<div>",
                     {
-                        css:{fontSize:"90%",
+                        class: "vinfo",
+                            css:{fontSize:"90%",
                              rightMargin:"10px"},
                         html: datestr
                     })
@@ -988,7 +1002,8 @@ function n9spider_yt_sidebar_video_div(args)
     // comment counts
     var vidid = video_id;
     infobox.append( $("<div>",
-                        {   css: {fontSize:"80%"},
+                        {   class: "vinfo",
+                            css: {fontSize:"80%"},
                             text:"est. # comments: "
                                     + video.get("comments_count")
                         }
@@ -1005,7 +1020,8 @@ function n9spider_yt_sidebar_video_div(args)
                 );
     newel.append(infobox);
     
-    newel.append( $("<br clear='all'/>"));
+    //newel.append( $("<br clear='all'/>"));
+    newel.append( $("<br/>"));
     newel.attr("data-timestamp",post_date);
     
     return newel;
@@ -1014,6 +1030,7 @@ function n9spider_yt_sidebar_video_div(args)
 
 function n9spider_yt_video_div(args)
 {
+    //NOFUNC();
     var video = 0;
     
     if ("n9_video" in args)
